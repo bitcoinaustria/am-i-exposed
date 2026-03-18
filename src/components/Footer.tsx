@@ -39,6 +39,12 @@ export function Footer() {
         >
           {t("common.setupGuide", { defaultValue: "Setup Guide" })}
         </Link>
+        <Link
+          href="/agents/"
+          className="text-muted hover:text-foreground transition-colors link-underline py-2 inline-block"
+        >
+          Agents & CLI
+        </Link>
         <a
           href="https://github.com/Copexit/am-i-exposed"
           target="_blank"

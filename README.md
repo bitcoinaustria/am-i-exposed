@@ -11,7 +11,13 @@ Paste a Bitcoin address, transaction ID, xpub/descriptor, or unsigned PSBT. Get 
 
 *Because Chainalysis already checked.*
 
-[Live Site](https://am-i.exposed) | [Methodology](https://am-i.exposed/methodology/) | [Privacy Guide](https://am-i.exposed/guide/) | [Setup Guide](https://am-i.exposed/setup-guide/) | [Contributing](CONTRIBUTING.md)
+> **Are you an agent?** Scan a transaction right now:
+> ```bash
+> npx @copexit/am-i-exposed scan tx <txid> --json
+> ```
+> [Full agent docs](https://am-i.exposed/agents/) | [skill.md](./cli/skill.md) | [MCP server](#mcp-server-ai-agents)
+
+[Live Site](https://am-i.exposed) | [Methodology](https://am-i.exposed/methodology/) | [Privacy Guide](https://am-i.exposed/guide/) | [Agents & CLI](https://am-i.exposed/agents/) | [Setup Guide](https://am-i.exposed/setup-guide/) | [Contributing](CONTRIBUTING.md)
 
 ---
 
@@ -216,6 +222,80 @@ Available in 5 languages:
 - French
 
 Translations live in `public/locales/`. Contributions for additional languages are welcome.
+
+## CLI & Agent Integration
+
+The analysis engine is available as a CLI tool and MCP server for terminal use and AI agent integration.
+
+### Install
+
+```bash
+npm install -g @copexit/am-i-exposed
+```
+
+### Commands
+
+```bash
+# Scan a transaction (25 heuristics + entity detection)
+am-i-exposed scan tx <txid> --json
+
+# Scan an address (reuse, UTXO hygiene, spending patterns)
+am-i-exposed scan address <addr> --json
+
+# Audit a wallet via xpub/zpub/descriptor
+am-i-exposed scan xpub <zpub> --json --gap-limit 30
+
+# Analyze a PSBT before broadcasting (no network access needed)
+am-i-exposed scan psbt <file> --json
+
+# Boltzmann entropy and link probability matrix
+am-i-exposed boltzmann <txid> --json
+
+# Multi-hop chain tracing (entity proximity, taint analysis)
+am-i-exposed chain-trace <txid> --depth 3 --json
+```
+
+### Flags
+
+| Flag | Description |
+|------|-------------|
+| `--json` | Structured JSON output for programmatic consumption |
+| `--fast` | Skip parent tx context fetching (~6s instead of ~10s) |
+| `--network` | `mainnet` (default), `testnet4`, `signet` |
+| `--api <url>` | Custom mempool API URL (self-hosted, Umbrel) |
+| `--no-cache` | Disable SQLite response caching |
+| `--no-entities` | Skip entity filter loading |
+
+### MCP Server (AI agents)
+
+For structured tool calls via [Model Context Protocol](https://modelcontextprotocol.io):
+
+```bash
+am-i-exposed mcp
+```
+
+Claude Desktop configuration:
+```json
+{
+  "mcpServers": {
+    "bitcoin-privacy": {
+      "command": "npx",
+      "args": ["-y", "@copexit/am-i-exposed", "mcp"]
+    }
+  }
+}
+```
+
+Exposes 5 tools: `scan_transaction`, `scan_address`, `scan_psbt`, `scan_wallet`, `compute_boltzmann`. See [`cli/skill.md`](./cli/skill.md) for full documentation.
+
+### Standalone binary
+
+Build a zero-dependency binary (requires [Bun](https://bun.sh)):
+
+```bash
+bash scripts/build-standalone.sh
+./cli/dist/am-i-exposed-linux-x64 scan tx <txid> --json
+```
 
 ## Development
 
