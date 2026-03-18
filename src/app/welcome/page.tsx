@@ -2,8 +2,8 @@
 
 import { Suspense, lazy } from "react";
 import Link from "next/link";
-import { ArrowRight, Github } from "lucide-react";
-import { useTranslation } from "react-i18next";
+import { ArrowRight, Github, Server } from "lucide-react";
+import { Trans, useTranslation } from "react-i18next";
 
 const TipJar = lazy(() =>
   import("@/components/TipJar").then((m) => ({ default: m.TipJar }))
@@ -16,62 +16,85 @@ export default function WelcomePage() {
     <div className="flex-1 flex flex-col items-center px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
       <article className="w-full max-w-2xl space-y-14">
 
-        {/* --- Why it exists --- */}
+        {/* --- The Problem --- */}
         <section className="space-y-5">
           <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
-            {t("welcome.why_heading", { defaultValue: "Why This Exists" })}
+            {t("welcome.problem_heading", { defaultValue: "The Problem" })}
           </h2>
           <div className="space-y-4 text-muted leading-relaxed">
-            <p>{t("welcome.why_p1", { defaultValue: "In April 2024, OXT.me and KYCP.org went offline after the Samourai Wallet arrests. They were the only tools that let ordinary people see what chain analysis firms could infer about their transactions." })}</p>
-            <p>{t("welcome.why_p2", { defaultValue: "Chainalysis, Elliptic, and Crystal kept their tools. The asymmetry became total: they could see everything about you, and you could see nothing about yourself." })}</p>
-            <p className="font-medium text-foreground">{t("welcome.why_p3", { defaultValue: "am-i.exposed was built to close that gap." })}</p>
+            <p>{t("welcome.problem_p1", { defaultValue: "There is a widespread belief that Bitcoin is private by default. That buying without KYC is enough." })}</p>
+            <p className="font-medium text-foreground">{t("welcome.problem_p2", { defaultValue: "It is not." })}</p>
+            <p>{t("welcome.problem_p3", { defaultValue: "Every transaction with another person leaks information. Not all at once, not obviously - but it accumulates. Over time, anyone you have transacted with can reconstruct fragments of your economic activity if your UTXOs have not been managed carefully. Not just chain analysis firms watching from the outside - also the person you paid last month, or the merchant who sold you something six months ago." })}</p>
+            <p>{t("welcome.problem_p4", { defaultValue: "Nobody would want a stranger to know how much money they have or where it comes from. But there is enormous confusion about how Bitcoin transactions actually work, and that confusion has a cost." })}</p>
+            <p>{t("welcome.problem_p5", { defaultValue: "In April 2024, OXT.me and KYCP.org went offline after the Samourai Wallet arrests. They were the only tools that let ordinary people see what chain analysis firms could infer about their transactions." })}</p>
+            <p>{t("welcome.problem_p6", { defaultValue: "Chainalysis, Elliptic, and Crystal kept operating as usual. The asymmetry became absolute: they kept analyzing with their tools, and users were left with no way to see what those analyses said about them." })}</p>
+            <p className="font-medium text-foreground">{t("welcome.problem_p7", { defaultValue: "am-i.exposed was built to close that gap." })}</p>
           </div>
         </section>
 
-        {/* --- What it is --- */}
+        {/* --- Hero tagline --- */}
         <section className="space-y-5">
           <p className="text-xl sm:text-2xl font-semibold text-bitcoin leading-snug">
             {t("welcome.hero_tagline", { defaultValue: "They score your wallet every day. You've never seen the results." })}
           </p>
           <p className="text-muted leading-relaxed">
-            {t("welcome.hero_desc", { defaultValue: "A Bitcoin privacy scanner that runs the same heuristics chain surveillance firms use. Except it runs in your browser. And it doesn't phone home." })}
+            {t("welcome.hero_desc", { defaultValue: "A Bitcoin privacy scanner that runs the same heuristics blockchain surveillance firms use. Except it runs in your browser. And it does not phone home." })}
           </p>
         </section>
 
-        {/* --- What it is not --- */}
+        {/* --- What this is not --- */}
         <section className="space-y-5">
           <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
             {t("welcome.not_heading", { defaultValue: "What This Is Not" })}
           </h2>
           <div className="space-y-4 text-muted leading-relaxed">
             <p>{t("welcome.not_p1", { defaultValue: "This is not a company. There are no accounts, no data collection, no cookies, no analytics. There is no privacy policy because there is nothing to write a privacy policy about." })}</p>
-            <p>{t("welcome.not_p2", { defaultValue: "This is just a static website. No server, no backend - plain HTML, JS, CSS, and WASM. A complex one, but still just a static site. Your addresses and transactions never leave your browser. The only network requests go to mempool.space for blockchain data - or to your own instance if you run one." })}</p>
+            <p>
+              <Trans
+                i18nKey="welcome.not_p2"
+                defaults="This is a static website. No server, no backend - HTML, JS, CSS, and WASM. Your addresses and transactions never leave your browser. The only network requests go to mempool.space for blockchain data - or to <guide>your own instance</guide> if you run a node."
+                components={{ guide: <Link href="/setup-guide/" className="text-bitcoin hover:underline" /> }}
+              />
+            </p>
+            <p>{t("welcome.not_p3", { defaultValue: "Data collection is not avoided as a policy - it is architecturally impossible. There is no server to send data to. The code is auditable. The entire application can be downloaded and run offline." })}</p>
           </div>
         </section>
 
-        {/* --- The vision --- */}
+        {/* --- The Blind Spot --- */}
         <section className="space-y-5">
           <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
-            {t("welcome.vision_heading", { defaultValue: "The Vision" })}
+            {t("welcome.blindspot_heading", { defaultValue: "The Blind Spot" })}
           </h2>
           <div className="space-y-4 text-muted leading-relaxed">
-            <p className="font-medium text-foreground">{t("welcome.vision_p1", { defaultValue: "Bitcoin privacy is not individual. It is collective." })}</p>
-            <p>{t("welcome.vision_p2", { defaultValue: "Every time you break the round amount heuristic, you make every other transaction on the network harder to classify. Every time you stop reusing addresses, the clustering algorithms lose a link - not just on your wallet, but on every wallet that ever transacted with you. Every time you run a CoinJoin, you expand the anonymity set for everyone in the round, including people you will never meet." })}</p>
-            <p>{t("welcome.vision_p3", { defaultValue: "The surveillance model depends on patterns. On habits. On the assumption that most people won't bother. Every user who bothers degrades the model for everyone being watched." })}</p>
-            <p>{t("welcome.vision_p4", { defaultValue: "This tool exists so you can see exactly which patterns you're leaking. Not to shame you - to show you where the easy wins are. Most privacy improvements take thirty seconds. Use a new address. Avoid round amounts. Don't merge all your coins into one transaction." })}</p>
-            <p>{t("welcome.vision_p5", { defaultValue: "The goal is not perfection. The goal is for enough people to make small, consistent improvements that the heuristics stop being reliable. That's how you break surveillance at scale - not with one perfect transaction, but with a million slightly better ones." })}</p>
+            <p>{t("welcome.blindspot_p1", { defaultValue: "There is something Chainalysis, Elliptic, and Crystal will not tell you: their analyses are assumptions. Their heuristics are based on closed-source code that nobody can independently audit or verify. This is not forensic science - it is applied statistics with error margins." })}</p>
+            <p>{t("welcome.blindspot_p2", { defaultValue: "When a surveillance firm labels an address as \"probably\" linked to another, that probability comes from an opaque model. No independent validation. No peer review. No published error rates." })}</p>
+            <p>{t("welcome.blindspot_p3", { defaultValue: "What is true: the more ambiguous a transaction is, the less reliable any heuristic becomes. And ambiguity is something every Bitcoin user can create." })}</p>
           </div>
         </section>
 
-        {/* --- The money question --- */}
+        {/* --- Collective Defense --- */}
         <section className="space-y-5">
           <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
-            {t("welcome.money_heading", { defaultValue: "The Money Question" })}
+            {t("welcome.collective_heading", { defaultValue: "Collective Defense" })}
           </h2>
           <div className="space-y-4 text-muted leading-relaxed">
-            <p>{t("welcome.money_p1", { defaultValue: "There is no revenue model. This tool makes zero money." })}</p>
-            <p>{t("welcome.money_p2", { defaultValue: "If it helps you, there's a Lightning tip jar below. That's it. No ads will ever appear here. No investor is waiting for an exit. No token launch. No \"sign up for early access.\" If this tool disappears one day, it'll be because the maintainer moved on, not because a business failed." })}</p>
-            <p>{t("welcome.money_p3", { defaultValue: "Everything is open source. MIT licensed. Fork it, audit it, self-host it. The code is the product. This is just a static page. The product is free." })}</p>
+            <p className="font-medium text-foreground">{t("welcome.collective_p1", { defaultValue: "Bitcoin privacy is not individual. It is collective." })}</p>
+            <p>{t("welcome.collective_p2", { defaultValue: "Every time you avoid a round amount, you make every other transaction on the network harder to classify. Every time you stop reusing addresses, the clustering algorithms lose a link - not just on your wallet, but on every wallet that ever transacted with you. Every time you run a CoinJoin, the anonymity set grows for everyone in the round, including people you will never meet." })}</p>
+            <p>{t("welcome.collective_p3", { defaultValue: "The surveillance model feeds on patterns. On habits. On the assumption that most people will not bother. Every person who bothers weakens it for everyone being watched." })}</p>
+            <p>{t("welcome.collective_p4", { defaultValue: "This tool exists so you can see which patterns you are leaving exposed. Not to shame you - to show you where the easy wins are. Changing a habit takes thirty seconds. Use a new address. Avoid round amounts. Do not merge all your coins into one transaction." })}</p>
+            <p>{t("welcome.collective_p5", { defaultValue: "There is no single solution that defeats blockchain analysis on its own. But every ambiguous transaction weakens the assumptions the models rely on. Every user who improves their habits erodes the reliability of the surveillance model - not just for themselves, but for every participant on the network. The goal is not perfection. The goal is for enough people to make small, consistent improvements that the heuristics stop being reliable." })}</p>
+          </div>
+        </section>
+
+        {/* --- No business model --- */}
+        <section className="space-y-5">
+          <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
+            {t("welcome.money_heading", { defaultValue: "No Business Model" })}
+          </h2>
+          <div className="space-y-4 text-muted leading-relaxed">
+            <p>{t("welcome.money_p1", { defaultValue: "There is no business model. This tool makes zero money." })}</p>
+            <p>{t("welcome.money_p2", { defaultValue: "If it helps, there is a Lightning tip jar below. Nothing more. No ads will ever appear here. No investor is waiting for an exit. No token. No \"sign up for early access.\" If this tool disappears one day, it will be because the maintainer moved on - not because a business failed." })}</p>
+            <p>{t("welcome.money_p3", { defaultValue: "All the code is open. MIT licensed. Fork it, audit it, run your own copy." })}</p>
           </div>
         </section>
 
@@ -90,7 +113,7 @@ export default function WelcomePage() {
             {t("welcome.catch_heading", { defaultValue: "The Catch" })}
           </h2>
           <p className="text-muted leading-relaxed">
-            {t("welcome.catch_p1", { defaultValue: "This tool cannot protect you from anything. It can only show you what is already visible to anyone running the same heuristics. If the result scares you, that's the point. Now you know what they know." })}
+            {t("welcome.catch_p1", { defaultValue: "This tool cannot protect you from anything. It can only show you what is already visible to anyone running the same heuristics. If the result scares you, that is the point. Now you know what they know." })}
           </p>
         </section>
 
@@ -103,15 +126,24 @@ export default function WelcomePage() {
             {t("welcome.cta", { defaultValue: "Scan your first transaction" })}
             <ArrowRight size={18} />
           </Link>
-          <a
-            href="https://github.com/Copexit/am-i-exposed"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 text-sm text-muted hover:text-foreground transition-colors"
-          >
-            <Github size={14} />
-            {t("welcome.github_link", { defaultValue: "View source on GitHub" })}
-          </a>
+          <div className="flex items-center gap-6">
+            <a
+              href="https://github.com/Copexit/am-i-exposed"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 text-sm text-muted hover:text-foreground transition-colors"
+            >
+              <Github size={14} />
+              {t("welcome.github_link", { defaultValue: "View source on GitHub" })}
+            </a>
+            <Link
+              href="/setup-guide/"
+              className="inline-flex items-center gap-1.5 text-sm text-muted hover:text-foreground transition-colors"
+            >
+              <Server size={14} />
+              {t("welcome.selfhost_link", { defaultValue: "Run your own instance" })}
+            </Link>
+          </div>
         </section>
       </article>
     </div>
