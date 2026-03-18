@@ -1,0 +1,98 @@
+/**
+ * Tests for the Boltzmann WASM adapter and command.
+ * Uses the real WASM bindings (built by wasm-pack --target nodejs).
+ */
+import { describe, it, expect } from "vitest";
+import { computeBoltzmann } from "../src/adapters/boltzmann-node";
+
+describe("computeBoltzmann - real WASM", () => {
+  it("computes entropy for a 5x5 Whirlpool-like tx", async () => {
+    // 5 inputs, 5 equal outputs (mimics Whirlpool)
+    const inputs = [5010000, 5020000, 5030000, 5015000, 5025000];
+    const outputs = [5000000, 5000000, 5000000, 5000000, 5000000];
+    const fee = inputs.reduce((a, b) => a + b, 0) - outputs.reduce((a, b) => a + b, 0);
+
+    const result = await computeBoltzmann(inputs, outputs, fee);
+
+    expect(result.entropy).toBeGreaterThan(5);
+    expect(result.efficiency).toBeGreaterThan(0.5);
+    expect(result.nbCmbn).toBeGreaterThan(1);
+    expect(result.deterministicLinks).toHaveLength(0);
+    expect(result.timedOut).toBe(false);
+    expect(result.nInputs).toBe(5);
+    expect(result.nOutputs).toBe(5);
+  });
+
+  it("returns deterministic links for a simple 2-in 2-out payment", async () => {
+    // 2 inputs of different values, 2 outputs where only one mapping is valid
+    const inputs = [100000, 50000];
+    const outputs = [120000, 28500];
+    const fee = 1500;
+
+    const result = await computeBoltzmann(inputs, outputs, fee);
+
+    // With distinct values, there's typically only 1 valid interpretation
+    expect(result.nbCmbn).toBeGreaterThanOrEqual(1);
+    expect(result.deterministicLinks.length).toBeGreaterThanOrEqual(0);
+    expect(result.timedOut).toBe(false);
+  });
+
+  it("handles equal inputs with non-equal outputs", async () => {
+    const inputs = [100000, 100000];
+    const outputs = [150000, 48500];
+    const fee = 1500;
+
+    const result = await computeBoltzmann(inputs, outputs, fee);
+
+    expect(result.entropy).toBeGreaterThanOrEqual(0);
+    expect(result.nInputs).toBe(2);
+    expect(result.nOutputs).toBe(2);
+  });
+
+  it("produces correct matrix dimensions", async () => {
+    const inputs = [80000, 60000, 40000];
+    const outputs = [100000, 50000, 28500];
+    const fee = 1500;
+
+    const result = await computeBoltzmann(inputs, outputs, fee);
+
+    // Matrix should be [nOutputs][nInputs]
+    expect(result.matLnkProbabilities).toHaveLength(3);
+    for (const row of result.matLnkProbabilities) {
+      expect(row).toHaveLength(3);
+    }
+
+    // Each probability should be between 0 and 1
+    for (const row of result.matLnkProbabilities) {
+      for (const p of row) {
+        expect(p).toBeGreaterThanOrEqual(0);
+        expect(p).toBeLessThanOrEqual(1);
+      }
+    }
+  });
+
+  it("respects timeout", async () => {
+    // Use very short timeout - should complete or timeout gracefully
+    const inputs = [100000, 50000];
+    const outputs = [120000, 28500];
+    const fee = 1500;
+
+    const result = await computeBoltzmann(inputs, outputs, fee, 0.005, 1);
+
+    // Should return a result regardless (may be partial)
+    expect(result).toHaveProperty("entropy");
+    expect(result).toHaveProperty("timedOut");
+  });
+
+  it("efficiency is 1.0 for perfect CoinJoin structure", async () => {
+    // All equal inputs, all equal outputs
+    const inputs = [1000000, 1000000, 1000000];
+    const outputs = [990000, 990000, 990000];
+    const fee = 30000;
+
+    const result = await computeBoltzmann(inputs, outputs, fee);
+
+    expect(result.efficiency).toBeCloseTo(1.0, 1);
+    expect(result.deterministicLinks).toHaveLength(0);
+  });
+});

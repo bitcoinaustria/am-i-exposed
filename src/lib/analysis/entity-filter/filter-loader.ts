@@ -319,6 +319,29 @@ function createIndexBackedFilter(
 /** Progress callback: received bytes and total bytes (0 if unknown). */
 export type ProgressCallback = (loaded: number, total: number) => void;
 
+// ───────────────── Data loader configuration ─────────────────
+
+/**
+ * Override for fetchArrayBuffer, allowing non-browser environments (Node.js CLI)
+ * to load entity data from the filesystem instead of browser fetch.
+ */
+let fetchOverride: ((path: string) => Promise<ArrayBuffer | null>) | null =
+  null;
+
+/**
+ * Configure how entity data files are loaded.
+ * Call this before loadEntityFilter() to override the default browser fetch.
+ *
+ * @param opts.fetchFn - Custom function to load a binary file by path.
+ *                       Receives the same path strings used internally
+ *                       (e.g., "/data/entity-index.bin").
+ */
+export function configureDataLoader(opts: {
+  fetchFn?: (path: string) => Promise<ArrayBuffer | null>;
+}): void {
+  fetchOverride = opts.fetchFn ?? null;
+}
+
 /**
  * Fetch a binary file with optional streaming progress.
  * Returns the ArrayBuffer, or null on failure.
@@ -327,6 +350,9 @@ async function fetchArrayBuffer(
   path: string,
   onProgress?: ProgressCallback,
 ): Promise<ArrayBuffer | null> {
+  // Allow CLI / Node.js to override the fetch mechanism
+  if (fetchOverride) return fetchOverride(path);
+
   const res = await fetch(path);
   if (!res.ok) return null;
 

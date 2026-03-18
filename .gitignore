@@ -72,3 +72,8 @@ public/data/entity-index-full.bin
 # Rust build artifacts (pre-built WASM binaries in public/wasm/ are committed)
 boltzmann-rs/target/
 boltzmann-rs/pkg/
+
+# CLI build artifacts
+cli/dist/
+cli/wasm/
+cli/node_modules/

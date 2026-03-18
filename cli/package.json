@@ -1,0 +1,55 @@
+{
+  "name": "@copexit/am-i-exposed",
+  "version": "0.33.0",
+  "description": "Bitcoin privacy scanner - analyze transactions, addresses, and wallets for chain analysis exposure",
+  "bin": {
+    "am-i-exposed": "./dist/index.js"
+  },
+  "files": [
+    "dist/",
+    "data/",
+    "wasm/",
+    "skill.md"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "tsx src/index.ts",
+    "build": "node build.mjs",
+    "build:wasm": "bash ../scripts/build-boltzmann-wasm-node.sh",
+    "test": "vitest run",
+    "prepublishOnly": "node build.mjs && rm -rf data && mkdir -p data && cp ../public/data/entity-*.bin data/"
+  },
+  "dependencies": {
+    "@noble/curves": "^2.0.1",
+    "@noble/hashes": "^2.0.1",
+    "@scure/base": "^2.0.0",
+    "@scure/bip32": "^2.0.1",
+    "@scure/btc-signer": "^2.0.1",
+    "chalk": "^5.4.1",
+    "commander": "^13.1.0",
+    "ora": "^8.2.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "esbuild": "^0.25.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5",
+    "vitest": "^4.0.18",
+    "vite-tsconfig-paths": "^6.1.1"
+  },
+  "keywords": [
+    "bitcoin",
+    "privacy",
+    "chain-analysis",
+    "boltzmann",
+    "coinjoin",
+    "cli"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Copexit/am-i-exposed"
+  }
+}

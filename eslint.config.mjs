@@ -18,6 +18,9 @@ const eslintConfig = defineConfig([
     "docs/archive/**",
     // Generated WASM glue code
     "public/wasm/**",
+    // CLI build artifacts and generated WASM bindings
+    "cli/dist/**",
+    "cli/wasm/**",
     // Utility scripts (Playwright captures, WASM tests, etc.)
     "scripts/**",
     "screenshots/**",

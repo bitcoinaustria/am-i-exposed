@@ -24,6 +24,7 @@
 - **[spec-custom-api-endpoint.md](./spec-custom-api-endpoint.md)** - Custom mempool API URL feature
 - **[spec-advanced-features.md](./spec-advanced-features.md)** - Bloom filters, label import, Chainabuse, taint propagation
 - **[spec-cex-risk-check.md](./spec-cex-risk-check.md)** - CeX risk check feature (Chainalysis, OFAC, stablecoin blacklists)
+- **[spec-cli-tool.md](./spec-cli-tool.md)** - CLI tool requirements, architecture, commands, JSON schemas, roadmap
 - **[feedback-2026-02-21.md](./feedback-2026-02-21.md)** - Community feedback notes
 
 ## Research Archive
