@@ -1,12 +1,11 @@
 "use client";
 
 import { useState, useEffect, useRef, useSyncExternalStore } from "react";
-import { QRCodeSVG } from "qrcode.react";
 import { motion, AnimatePresence } from "motion/react";
-import { Heart, X, Copy, Check, Zap } from "lucide-react";
+import { Heart, X, Copy, Check, ExternalLink } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { copyToClipboard } from "@/lib/clipboard";
-import { LN_ADDRESS } from "@/lib/constants";
+import { LN_ADDRESS, COINOS_PAY_URL } from "@/lib/constants";
 const DISMISS_KEY = "ami-tip-toast-dismissed";
 
 function getDismissed(): boolean {
@@ -114,7 +113,7 @@ export function TipToast() {
               <X size={16} />
             </button>
 
-            {/* Expanded: QR + address */}
+            {/* Expanded: tip button + address */}
             <AnimatePresence>
               {expanded && (
                 <motion.div
@@ -128,22 +127,18 @@ export function TipToast() {
                     <div className="border-t border-card-border pt-3" />
 
                     <div className="flex justify-center">
-                      <div className="bg-white rounded-lg p-3">
-                        <QRCodeSVG
-                          value={`lightning:${LN_ADDRESS}`}
-                          size={140}
-                          level="M"
-                          includeMargin={false}
-                          role="img"
-                          aria-label={t("common.qrLabel", { defaultValue: "Lightning payment QR code" })}
-                        />
-                      </div>
+                      <a
+                        href={COINOS_PAY_URL}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center justify-center gap-2 text-sm font-medium text-background bg-bitcoin hover:bg-bitcoin/90 transition-colors px-4 py-2.5 rounded-lg w-full"
+                      >
+                        <ExternalLink size={14} />
+                        {t("common.tipViaCoinos", { defaultValue: "Tip via Bitcoin, Lightning, or Liquid" })}
+                      </a>
                     </div>
 
                     <div className="text-center space-y-2">
-                      <p className="text-xs text-muted">
-                        {t("common.tipScanQR", { defaultValue: "Scan with any Lightning wallet, or copy the address below" })}
-                      </p>
                       <div className="flex items-center justify-center gap-2">
                         <code className="text-xs text-bitcoin bg-bitcoin/10 px-2 py-1 rounded font-mono break-all">
                           {LN_ADDRESS}
@@ -156,13 +151,6 @@ export function TipToast() {
                           {copied ? t("common.copied", { defaultValue: "Copied" }) : t("common.copy", { defaultValue: "Copy" })}
                         </button>
                       </div>
-                      <a
-                        href="nostr:npub14n4e3dnxcumh7kexfgunp86dzhtjcfewe40g4qm6yfl3kf9ute2q5jqr48"
-                        className="inline-flex items-center gap-1.5 text-xs text-purple-500 hover:text-purple-400 transition-colors mt-1"
-                      >
-                        <Zap size={12} />
-                        {t("common.zapNostr", { defaultValue: "Zap via Nostr" })}
-                      </a>
                     </div>
                     <p className="text-center text-xs text-muted">
                       {t("common.v4v", { defaultValue: "Powered by Value4Value - no ads, no subscriptions, just voluntary support" })}

@@ -3,10 +3,10 @@
 import { useState, useRef, useEffect } from "react";
 import { QRCodeSVG } from "qrcode.react";
 import { motion, AnimatePresence } from "motion/react";
-import { Heart, ChevronDown, Copy, Check, Zap } from "lucide-react";
+import { Heart, ChevronDown, Copy, Check } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { copyToClipboard } from "@/lib/clipboard";
-import { LN_ADDRESS } from "@/lib/constants";
+import { LN_ADDRESS, COINOS_PAY_URL } from "@/lib/constants";
 export function TipJar() {
   const { t } = useTranslation();
   const [expanded, setExpanded] = useState(() => {
@@ -71,19 +71,19 @@ export function TipJar() {
               <div className="flex justify-center">
                 <div className="bg-white rounded-lg p-3">
                   <QRCodeSVG
-                    value={`lightning:${LN_ADDRESS}`}
+                    value={COINOS_PAY_URL}
                     size={160}
                     level="M"
                     includeMargin={false}
                     role="img"
-                    aria-label={t("common.qrLabel", { defaultValue: "Lightning payment QR code" })}
+                    aria-label={t("common.qrLabel", { defaultValue: "Bitcoin payment QR code" })}
                   />
                 </div>
               </div>
 
               <div className="text-center space-y-2">
                 <p className="text-xs text-muted">
-                  {t("common.tipScanQR", { defaultValue: "Scan with any Lightning wallet, or copy the address below" })}
+                  {t("common.tipScanQR", { defaultValue: "Scan to tip via Bitcoin, Lightning, or Liquid - or copy the Lightning address below" })}
                 </p>
                 <div className="flex items-center justify-center gap-2">
                   <code className="text-xs text-bitcoin bg-bitcoin/10 px-2 py-1 rounded font-mono break-all">
@@ -97,13 +97,6 @@ export function TipJar() {
                     {copied ? t("common.copied", { defaultValue: "Copied" }) : t("common.copy", { defaultValue: "Copy" })}
                   </button>
                 </div>
-                <a
-                  href="nostr:npub14n4e3dnxcumh7kexfgunp86dzhtjcfewe40g4qm6yfl3kf9ute2q5jqr48"
-                  className="inline-flex items-center gap-1.5 text-xs text-purple-500 hover:text-purple-400 transition-colors mt-1"
-                >
-                  <Zap size={12} />
-                  {t("common.zapNostr", { defaultValue: "Zap via Nostr" })}
-                </a>
               </div>
               <p className="text-center text-xs text-muted">
                 {t("common.v4v", { defaultValue: "Powered by Value4Value - no ads, no subscriptions, just voluntary support" })}

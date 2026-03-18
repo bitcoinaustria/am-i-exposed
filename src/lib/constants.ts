@@ -6,6 +6,9 @@ export const SATS_PER_BTC = 100_000_000;
 /** Lightning address for tips / Value4Value. */
 export const LN_ADDRESS = "exposed@coinos.io";
 
+/** Coinos pay page accepting Bitcoin, Lightning, and Liquid. */
+export const COINOS_PAY_URL = "https://coinos.io/pay/exposed";
+
 /** Basic format validation for Bitcoin addresses (all networks). */
 export const ADDR_RE = /^[a-zA-Z0-9]{25,90}$/;
 

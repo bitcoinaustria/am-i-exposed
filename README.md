@@ -334,9 +334,9 @@ See [`research-boltzmann-entropy.md`](./docs/research-boltzmann-entropy.md) for 
 
 am-i.exposed is free, open-source, and funded entirely by voluntary contributions. No ads, no subscriptions, no token.
 
-**Lightning:** `exposed@coinos.io`
+**Tip (Bitcoin, Lightning, Liquid):** https://coinos.io/pay/exposed
 
-**Nostr zap:** `npub14n4e3dnxcumh7kexfgunp86dzhtjcfewe40g4qm6yfl3kf9ute2q5jqr48`
+**Lightning address:** `exposed@coinos.io`
 
 ## Authors
 
