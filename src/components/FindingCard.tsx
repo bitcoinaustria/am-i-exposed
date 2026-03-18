@@ -8,7 +8,7 @@ import type { Finding, Severity, ConfidenceLevel } from "@/lib/types";
 import { WalletIcon } from "@/components/ui/WalletIcon";
 import { Tooltip } from "@/components/ui/Tooltip";
 import { truncateId } from "@/lib/constants";
-import { formatSats } from "@/lib/format";
+import { formatSats, fmtN } from "@/lib/format";
 import { copyToClipboard } from "@/lib/clipboard";
 
 /** Map finding IDs to relevant FAQ section anchors */
@@ -173,6 +173,16 @@ export const FindingCard = memo(function FindingCard({ finding, index, defaultEx
                   </p>
                 </div>
               )}
+              {/* Ricochet hop table */}
+              {finding.id === "ricochet-hop0" && finding.params?.hops && (
+                <RicochetHopTable
+                  hopsJson={String(finding.params.hops)}
+                  variant={String(finding.params.variant ?? "classic")}
+                  hopCount={Number(finding.params.hopCount ?? 0)}
+                  lang={i18n.language}
+                  onTxClick={onTxClick}
+                />
+              )}
               {/* Consolidation group table for chain-post-coinjoin-consolidation */}
               {finding.id === "chain-post-coinjoin-consolidation" && finding.params?._consolidationGroups && (
                 <ConsolidationTable
@@ -216,6 +226,104 @@ export const FindingCard = memo(function FindingCard({ finding, index, defaultEx
     </motion.div>
   );
 });
+
+// ─── Ricochet hop table ─────────────────────────────────────────────────
+
+interface RicochetHop {
+  hop: number;
+  txid: string;
+  blockHeight: number;
+  value: number;
+  outputCount: number;
+}
+
+function RicochetHopTable({
+  hopsJson,
+  variant,
+  hopCount,
+  lang,
+  onTxClick,
+}: {
+  hopsJson: string;
+  variant: string;
+  hopCount: number;
+  lang: string;
+  onTxClick?: (txid: string) => void;
+}) {
+  const { t } = useTranslation();
+  let hops: RicochetHop[];
+  try {
+    hops = JSON.parse(hopsJson) as RicochetHop[];
+  } catch {
+    return null;
+  }
+  if (hops.length === 0) return null;
+
+  const variantLabel = variant === "staggered"
+    ? t("finding.ricochetVariant.staggered", { defaultValue: "Staggered" })
+    : t("finding.ricochetVariant.classic", { defaultValue: "Classic (consecutive blocks)" });
+
+  const lastHopIndex = hops.length - 1;
+
+  return (
+    <div className="rounded-md border border-severity-high/20 overflow-hidden">
+      {/* Header with variant badge */}
+      <div className="px-3 py-1.5 bg-severity-high/8 border-b border-severity-high/15 flex items-center gap-2">
+        <span className="text-[10px] px-1.5 py-0.5 rounded-full border border-severity-high/30 bg-severity-high/10 text-severity-high font-medium">
+          {variantLabel}
+        </span>
+        <span className="text-xs text-muted">
+          {t("finding.ricochetHopCount", { count: hopCount || hops.length, defaultValue: "{{count}} hops" })}
+        </span>
+      </div>
+
+      {/* Column headers */}
+      <div className="grid grid-cols-[2rem_1fr_5rem_6rem] gap-x-2 px-3 py-1 border-b border-card-border text-[10px] uppercase tracking-wider text-muted">
+        <span>{t("finding.ricochetCol.hop", { defaultValue: "Hop" })}</span>
+        <span>{t("finding.ricochetCol.txid", { defaultValue: "Txid" })}</span>
+        <span className="text-right">{t("finding.ricochetCol.block", { defaultValue: "Block" })}</span>
+        <span className="text-right">{t("finding.ricochetCol.amount", { defaultValue: "Amount" })}</span>
+      </div>
+
+      {/* Hop rows */}
+      <div className="divide-y divide-card-border overflow-y-auto" style={{ maxHeight: 240 }}>
+        {hops.map((hop, idx) => (
+          <div key={hop.txid} className="grid grid-cols-[2rem_1fr_5rem_6rem] gap-x-2 px-3 py-1.5 items-center text-xs">
+            <span className="text-muted font-mono">{hop.hop}</span>
+            <span className="flex items-center gap-1">
+              {onTxClick ? (
+                <button
+                  onClick={() => onTxClick(hop.txid)}
+                  className="font-mono text-bitcoin hover:text-bitcoin-hover transition-colors cursor-pointer"
+                >
+                  {truncateId(hop.txid, 4)}
+                </button>
+              ) : (
+                <a
+                  href={`/#tx=${hop.txid}`}
+                  className="font-mono text-bitcoin hover:text-bitcoin-hover transition-colors"
+                >
+                  {truncateId(hop.txid, 4)}
+                </a>
+              )}
+              {idx === lastHopIndex && (
+                <span className="text-[10px] text-severity-high/80">
+                  {t("finding.ricochetDest", { defaultValue: "-> dest" })}
+                </span>
+              )}
+            </span>
+            <span className="text-right text-muted font-mono">
+              {fmtN(hop.blockHeight)}
+            </span>
+            <span className="text-right text-muted font-mono">
+              {formatSats(hop.value, lang)}
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 // ─── Consolidation detail table ─────────────────────────────────────────
 
