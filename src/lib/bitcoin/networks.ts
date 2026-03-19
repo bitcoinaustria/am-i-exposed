@@ -11,14 +11,13 @@ export interface NetworkConfig {
 export const NETWORK_CONFIG: Record<BitcoinNetwork, NetworkConfig> = {
   mainnet: {
     label: "Mainnet",
-    mempoolBaseUrl: "https://mempool.space/api",
-    mempoolOnionUrl: "http://mempoolhqx4isw62xs7abwphsq7ldayuidyx2v2oethdhhj6mlo2r6ad.onion/api",
-    explorerUrl: "https://mempool.space",
+    mempoolBaseUrl: "https://mempool.bitcoin-austria.at/api",
+    explorerUrl: "https://mempool.bitcoin-austria.at",
   },
   testnet4: {
     label: "Testnet4",
-    mempoolBaseUrl: "https://mempool.space/testnet4/api",
-    explorerUrl: "https://mempool.space/testnet4",
+    mempoolBaseUrl: "https://mempool.bitcoin-austria.at/testnet4/api",
+    explorerUrl: "https://mempool.bitcoin-austria.at/testnet4",
   },
   testnet3: {
     label: "Testnet3",
@@ -27,8 +26,8 @@ export const NETWORK_CONFIG: Record<BitcoinNetwork, NetworkConfig> = {
   },
   signet: {
     label: "Signet",
-    mempoolBaseUrl: "https://mempool.space/signet/api",
-    explorerUrl: "https://mempool.space/signet",
+    mempoolBaseUrl: "https://mempool.bitcoin-austria.at/signet/api",
+    explorerUrl: "https://mempool.bitcoin-austria.at/signet",
   },
 };
 

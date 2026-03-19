@@ -31,11 +31,8 @@ describe("NETWORK_CONFIG", () => {
     expect(Object.keys(NETWORK_CONFIG)).toEqual(["mainnet", "testnet4", "testnet3", "signet"]);
   });
 
-  it("mainnet has onion URL", () => {
-    expect(NETWORK_CONFIG.mainnet.mempoolOnionUrl).toContain(".onion");
-  });
-
-  it("testnet4, testnet3, and signet lack onion URL", () => {
+  it("no networks have onion URL", () => {
+    expect(NETWORK_CONFIG.mainnet.mempoolOnionUrl).toBeUndefined();
     expect(NETWORK_CONFIG.testnet4.mempoolOnionUrl).toBeUndefined();
     expect(NETWORK_CONFIG.testnet3.mempoolOnionUrl).toBeUndefined();
     expect(NETWORK_CONFIG.signet.mempoolOnionUrl).toBeUndefined();
