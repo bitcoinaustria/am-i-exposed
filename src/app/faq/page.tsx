@@ -82,7 +82,7 @@ const DEFAULTS: Record<string, string> = {
   "faq.q_check_privacy": "How can I check my Bitcoin privacy?",
   "faq.a_check_privacy": "Paste your Bitcoin address or transaction ID into am-i.exposed. The tool analyzes it using 30 heuristics - the same techniques chain analysis firms use - and gives you a privacy score from 0 to 100 with a letter grade (A+ to F) and specific actionable findings. Everything runs in your browser with no tracking.",
   "faq.q_safe": "Is am-i.exposed safe to use?",
-  "faq.a_safe": "All analysis runs client-side in your browser. There is no server, no accounts, no cookies, and no tracking. However, your browser makes API requests to mempool.space to fetch blockchain data, which means their servers can see your IP and queries. For maximum privacy, use Tor Browser or connect your own node.",
+  "faq.a_safe": "All analysis runs client-side in your browser. There is no server, no accounts, no cookies, and no tracking. However, your browser makes API requests to mempool.bitcoin-austria.at to fetch blockchain data, which means their servers can see your IP and queries. For maximum privacy, use Tor Browser or connect your own node.",
   "faq.q_oxt_kycp": "What happened to OXT.me and KYCP.org?",
   "faq.a_oxt_kycp": "OXT.me and KYCP.org went offline in April 2024 following the arrest of the Samourai Wallet developers. OXT was the gold standard for Boltzmann entropy analysis. KYCP made CoinJoin privacy assessment accessible to ordinary users. am-i.exposed was created to fill the gap left by these tools.",
   "faq.q_coinjoin": "Does CoinJoin improve Bitcoin privacy?",
@@ -96,11 +96,11 @@ const DEFAULTS: Record<string, string> = {
   "faq.q_scoring": "How does Bitcoin privacy scoring work?",
   "faq.a_scoring": "Every analysis starts from a base score of 70. Each of the 30 heuristics applies a positive or negative modifier based on what it detects. The sum is clamped to 0-100. Only CoinJoin participation, Taproot usage, and high entropy can raise the score. Everything else can only lower it. Grades: A+ (90-100), B (75-89), C (50-74), D (25-49), F (0-24).",
   "faq.q_tor": "Can I use am-i.exposed with Tor?",
-  "faq.a_tor": "Yes. When you use Tor Browser, am-i.exposed auto-detects it and routes API requests through the mempool.space .onion endpoint. This hides which addresses you are querying from mempool.space. For even stronger privacy, connect your own mempool instance via the Setup Guide.",
+  "faq.a_tor": "Yes. When you use Tor Browser, am-i.exposed auto-detects it and routes API requests through a .onion endpoint. This hides which addresses you are querying from the API provider. For even stronger privacy, connect your own mempool instance via the Setup Guide.",
   "faq.q_cioh": "What is the Common Input Ownership Heuristic?",
   "faq.a_cioh": "If a Bitcoin transaction spends multiple inputs, all inputs are assumed to belong to the same entity. This is the foundational clustering heuristic used by chain surveillance firms like Chainalysis and Elliptic to link addresses together. CoinJoin is the primary way to break this assumption.",
   "faq.q_data": "Does am-i.exposed store my data?",
-  "faq.a_data": "No data is sent to any server beyond the mempool.space API for blockchain data. Fetched data is stored locally in your browser (IndexedDB) to avoid repeated requests, which further improves both privacy and performance of analysis. This cache can be cleared or disabled from Settings at any time. No analytics, no cookies, no tracking.",
+  "faq.a_data": "No data is sent to any server beyond the mempool.bitcoin-austria.at API for blockchain data. Fetched data is stored locally in your browser (IndexedDB) to avoid repeated requests, which further improves both privacy and performance of analysis. This cache can be cleared or disabled from Settings at any time. No analytics, no cookies, no tracking.",
 };
 
 export default function FaqPage() {

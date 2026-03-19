@@ -52,8 +52,8 @@ export function ResultsFooter({
         {t("results.disclaimerApi", {
           hostname: mempoolBaseUrl.startsWith("/")
             ? "local API"
-            : mempoolBaseUrl.includes("mempool.space")
-              ? "mempool.space"
+            : mempoolBaseUrl.includes("mempool.bitcoin-austria.at")
+              ? "mempool.bitcoin-austria.at"
               : (() => { try { return new URL(mempoolBaseUrl).hostname; } catch { return "custom API"; } })(),
           defaultValue: "API queries were sent to {{hostname}}.",
         })}{" "}

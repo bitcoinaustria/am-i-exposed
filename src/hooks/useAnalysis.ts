@@ -681,7 +681,7 @@ export function useAnalysis() {
               errorCode = "not-retryable";
               break;
             case "RATE_LIMITED":
-              message = t("errors.rate_limited", { defaultValue: "Rate limited by mempool.space. Please wait a moment and try again." });
+              message = t("errors.rate_limited", { defaultValue: "Rate limited by mempool.bitcoin-austria.at. Please wait a moment and try again." });
               break;
             case "NETWORK_ERROR":
               message = isUmbrel

@@ -59,7 +59,7 @@ export function ConnectionBadge() {
         clearnet: {
           icon: <ShieldAlert size={16} className="text-warning" />,
           label: <span className="text-warning text-xs hidden sm:inline">{t("common.clearnet", { defaultValue: "Clearnet" })}</span>,
-          tip: t("common.connectionClearnet", { defaultValue: "Not using Tor - mempool.space can see your IP address" }),
+          tip: t("common.connectionClearnet", { defaultValue: "Not using Tor - mempool.bitcoin-austria.at can see your IP address" }),
         },
       }[torStatus];
 
