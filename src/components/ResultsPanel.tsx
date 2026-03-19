@@ -100,7 +100,7 @@ export const ResultsPanel = memo(function ResultsPanel({
     ? t("results.viewOnCustom", { hostname: new URL(config.explorerUrl).hostname, defaultValue: "View on {{hostname}}" })
     : isUmbrel
       ? t("results.viewOnLocal", { defaultValue: "View on local mempool" })
-      : t("results.viewOnMempool", { defaultValue: "View on mempool.space" });
+      : t("results.viewOnMempool", { defaultValue: "View on mempool.bitcoin-austria.at" });
 
   // Hide findings that were suppressed for CoinJoin context (scoreImpact=0, context=coinjoin)
   // Also hide chain-trace-summary (metadata-only for TaintPathDiagram)
