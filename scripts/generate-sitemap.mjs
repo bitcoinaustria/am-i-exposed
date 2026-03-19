@@ -21,12 +21,19 @@ function getLastMod(file) {
   }
 }
 
+const SITE_URL = (process.env.SITE_URL || "https://am-i.exposed").replace(/\/+$/, "");
+
 const urls = PAGES.map(
   (p) =>
-    `  <url>\n    <loc>https://am-i.exposed${p.path}</loc>\n    <lastmod>${getLastMod(p.source)}</lastmod>\n    <changefreq>${p.changefreq}</changefreq>\n    <priority>${p.priority}</priority>\n  </url>`,
+    `  <url>\n    <loc>${SITE_URL}${p.path}</loc>\n    <lastmod>${getLastMod(p.source)}</lastmod>\n    <changefreq>${p.changefreq}</changefreq>\n    <priority>${p.priority}</priority>\n  </url>`,
 ).join("\n");
 
 const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls}\n</urlset>\n`;
 
 writeFileSync("public/sitemap.xml", xml);
-console.log("Sitemap generated with git-based lastmod dates");
+
+// Also update robots.txt sitemap reference
+const robotsTxt = `User-agent: *\nAllow: /\n\nDisallow: /offline.html\nDisallow: /_next/\n\nSitemap: ${SITE_URL}/sitemap.xml\n`;
+writeFileSync("public/robots.txt", robotsTxt);
+
+console.log(`Sitemap and robots.txt generated for ${SITE_URL}`);
