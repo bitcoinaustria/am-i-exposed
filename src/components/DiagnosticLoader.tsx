@@ -65,7 +65,7 @@ export function DiagnosticLoader({ steps, phase, inputType, fetchProgress }: Dia
               : phase === "fetching"
                 ? isUmbrel
                   ? t("loader.fetching_local", { defaultValue: "Fetching data from your mempool instance..." })
-                  : t("loader.fetching", { defaultValue: "Fetching data from mempool.space..." })
+                  : t("loader.fetching", { defaultValue: "Fetching data from mempool.bitcoin-austria.at..." })
                 : t("loader.diagnosing", { defaultValue: "Diagnosing your privacy..." })}
           </span>
         </div>

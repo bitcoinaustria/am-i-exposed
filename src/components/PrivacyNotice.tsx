@@ -53,7 +53,7 @@ export function PrivacyNotice() {
           <div className="flex items-center gap-2">
             <ShieldAlert size={16} className="text-warning shrink-0" aria-hidden="true" />
             <p className="text-xs sm:text-sm text-muted flex-1">
-              {t("common.privacyNotice", { defaultValue: "Queries are sent to mempool.space - your IP is visible. Use Tor or a VPN for stronger privacy." })}
+              {t("common.privacyNotice", { defaultValue: "Queries are sent to mempool.bitcoin-austria.at - your IP is visible. Use Tor or a VPN for stronger privacy." })}
             </p>
             <button
               onClick={handleDismiss}
