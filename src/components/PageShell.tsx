@@ -17,7 +17,7 @@ interface PageShellProps {
 }
 
 /**
- * Shared layout shell for sub-pages (about, faq, glossary, welcome, etc.).
+ * Shared layout shell for sub-pages (about, faq, glossary, methodology, etc.).
  * Provides the outer centering wrapper, back-link, and consistent spacing.
  */
 export function PageShell({

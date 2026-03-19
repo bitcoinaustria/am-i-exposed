@@ -38,18 +38,6 @@ export function calcFeeRate(tx: { fee: number; weight: number }): string {
   return (tx.fee / vsize).toFixed(1);
 }
 
-/** Module-level cache for Intl.RelativeTimeFormat instances, keyed by locale. */
-const rtfCache = new Map<string, Intl.RelativeTimeFormat>();
-
-function getRtf(locale: string): Intl.RelativeTimeFormat {
-  let rtf = rtfCache.get(locale);
-  if (!rtf) {
-    rtf = new Intl.RelativeTimeFormat(locale, { numeric: "auto", style: "narrow" });
-    rtfCache.set(locale, rtf);
-  }
-  return rtf;
-}
-
 /**
  * Locale-aware relative time formatting using Intl.RelativeTimeFormat.
  * Formats a unix timestamp as a human-readable "X ago" string.
@@ -58,7 +46,7 @@ export function formatTimeAgo(unixTimestamp: number, locale: string): string {
   const now = Math.floor(Date.now() / 1000);
   const diff = now - unixTimestamp;
 
-  const rtf = getRtf(locale);
+  const rtf = new Intl.RelativeTimeFormat(locale, { numeric: "auto", style: "narrow" });
 
   if (diff < 60) return rtf.format(-diff, "second");
   if (diff < 3600) return rtf.format(-Math.floor(diff / 60), "minute");

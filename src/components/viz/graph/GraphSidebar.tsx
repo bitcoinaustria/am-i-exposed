@@ -9,7 +9,6 @@ import { truncateId } from "@/lib/constants";
 import { analyzeTransactionSync } from "@/lib/analysis/analyze-sync";
 import { matchEntitySync } from "@/lib/analysis/entity-filter/entity-match";
 import { CopyButton } from "@/components/ui/CopyButton";
-import { useBookmarks } from "@/hooks/useBookmarks";
 import { IOTab } from "./IOTab";
 import type { MempoolTransaction, MempoolOutspend } from "@/lib/api/types";
 import type { BoltzmannWorkerResult } from "@/lib/analysis/boltzmann-pool";
@@ -37,8 +36,6 @@ interface GraphSidebarProps {
   /** Collapse sidebar (hide it, but keep the node expanded). */
   onCollapse?: () => void;
   onFullScan: (txid: string) => void;
-  /** Change graph root to this transaction (standalone graph page). */
-  onSetAsRoot?: (txid: string) => void;
   onExpandInput?: (txid: string, inputIndex: number) => void;
   onExpandOutput?: (txid: string, outputIndex: number) => void;
   /** Set of change-marked outputs: "${txid}:${outputIndex}". */
@@ -82,14 +79,11 @@ export function GraphSidebar({
   onAutoTraceLinkability,
   autoTracing,
   autoTraceProgress,
-  onSetAsRoot,
 }: GraphSidebarProps) {
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<Tab>("io");
-  const { bookmarks, addBookmark, removeBookmark } = useBookmarks();
 
   const result = useMemo<ScoringResult | null>(() => analyzeTransactionSync(tx), [tx]);
-  const isBookmarked = bookmarks.some((b) => b.input === tx.txid);
 
   const vsize = calcVsize(tx.weight);
   const feeRate = vsize > 0 ? (tx.fee / vsize).toFixed(1) : "0";
@@ -115,48 +109,13 @@ export function GraphSidebar({
         <div className="flex items-center gap-2 min-w-0">
           <span className="font-mono text-xs text-foreground/70 truncate">{truncateId(tx.txid, 10)}</span>
           <CopyButton text={tx.txid} variant="inline" />
-          <button
-            onClick={(e) => { e.stopPropagation(); window.open(`${window.location.origin}${window.location.pathname}#tx=${tx.txid}`, "_blank"); }}
-            className="text-muted/60 hover:text-foreground transition-colors cursor-pointer"
-            title={t("graph.openInNewTab", { defaultValue: "Open in new tab" })}
-          >
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
-              <polyline points="15 3 21 3 21 9" />
-              <line x1="10" y1="14" x2="21" y2="3" />
-            </svg>
-          </button>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              if (isBookmarked) {
-                removeBookmark(tx.txid);
-              } else {
-                addBookmark({
-                  input: tx.txid,
-                  type: "txid",
-                  grade: result?.grade ?? "?",
-                  score: result?.score ?? 0,
-                  label: "",
-                });
-              }
-            }}
-            className={`transition-colors cursor-pointer ${isBookmarked ? "text-bitcoin" : "text-muted/60 hover:text-foreground"}`}
-            title={isBookmarked
-              ? t("graph.bookmarked", { defaultValue: "Bookmarked" })
-              : t("graph.bookmark", { defaultValue: "Bookmark transaction" })}
-          >
-            <svg width="10" height="10" viewBox="0 0 24 24" fill={isBookmarked ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
-            </svg>
-          </button>
         </div>
         <div className="flex items-center gap-1 shrink-0">
           {onCollapse && (
             <button
               onClick={onCollapse}
               className="text-muted hover:text-foreground transition-colors p-0.5 cursor-pointer"
-              title={t("graph.collapseSidebar", { defaultValue: "Collapse sidebar" })}
+              title="Collapse sidebar"
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><polyline points="9 18 15 12 9 6" /></svg>
             </button>
@@ -199,8 +158,8 @@ export function GraphSidebar({
       {/* Tabs */}
       <div className="flex border-b border-card-border shrink-0">
         <button className={tabClass("io")} onClick={() => setActiveTab("io")}>I/O</button>
-        <button className={tabClass("analysis")} onClick={() => setActiveTab("analysis")}>{t("graph.tabAnalysis", { defaultValue: "Analysis" })}</button>
-        <button className={tabClass("technical")} onClick={() => setActiveTab("technical")}>{t("graph.tabTechnical", { defaultValue: "Technical" })}</button>
+        <button className={tabClass("analysis")} onClick={() => setActiveTab("analysis")}>Analysis</button>
+        <button className={tabClass("technical")} onClick={() => setActiveTab("technical")}>Technical</button>
       </div>
 
       {/* Tab content */}
@@ -231,22 +190,14 @@ export function GraphSidebar({
         )}
       </div>
 
-      {/* Action buttons */}
-      <div className="px-3 py-2 border-t border-card-border shrink-0 flex gap-2">
+      {/* Full scan button */}
+      <div className="px-3 py-2 border-t border-card-border shrink-0">
         <button
           onClick={() => onFullScan(tx.txid)}
-          className="flex-1 text-xs text-center py-2 rounded-lg border border-card-border text-muted hover:text-foreground hover:border-muted transition-colors cursor-pointer"
+          className="w-full text-xs text-center py-2 rounded-lg border border-card-border text-muted hover:text-foreground hover:border-muted transition-colors cursor-pointer"
         >
           {t("graphExplorer.analysis.fullScan", { defaultValue: "Full Scan" })}
         </button>
-        {onSetAsRoot && (
-          <button
-            onClick={() => onSetAsRoot(tx.txid)}
-            className="flex-1 text-xs text-center py-2 rounded-lg border border-card-border text-muted hover:text-foreground hover:border-muted transition-colors cursor-pointer"
-          >
-            {t("graphPage.setAsRoot", { defaultValue: "Set as root" })}
-          </button>
-        )}
       </div>
     </motion.div>
   );
@@ -329,23 +280,23 @@ function AnalysisTab({ result, tx }: { result: ScoringResult; tx: MempoolTransac
 // ─── Technical Tab ───────────────────────────────────────────────
 
 function TechnicalTab({ tx, feeRate, vsize }: { tx: MempoolTransaction; feeRate: string; vsize: number }) {
-  const { t } = useTranslation();
   const hasSegwit = tx.vin.some((v) => v.witness && v.witness.length > 0);
   const hasTaproot = tx.vin.some((v) => v.prevout?.scriptpubkey_type === "v1_p2tr") ||
     tx.vout.some((v) => v.scriptpubkey_type === "v1_p2tr");
   const isRbf = tx.vin.some((v) => v.sequence < 0xfffffffe);
+
   const rows: Array<{ label: string; value: string | number; highlight?: boolean }> = [
-    { label: t("graph.technical.version", { defaultValue: "Version" }), value: tx.version },
-    { label: t("graph.technical.locktime", { defaultValue: "Locktime" }), value: tx.locktime === 0 ? t("graph.technical.locktimeNone", { defaultValue: "0 (none)" }) : tx.locktime < 500_000_000 ? `${tx.locktime} ${t("graph.technical.locktimeBlockHeight", { defaultValue: "(block height)" })}` : `${tx.locktime} ${t("graph.technical.locktimeTimestamp", { defaultValue: "(timestamp)" })}` },
-    { label: t("graph.technical.size", { defaultValue: "Size" }), value: `${tx.size} ${t("graph.technical.bytes", { defaultValue: "bytes" })}` },
-    { label: t("graph.technical.weight", { defaultValue: "Weight" }), value: `${tx.weight} ${t("graph.technical.wu", { defaultValue: "WU" })}` },
-    { label: t("graph.technical.virtualSize", { defaultValue: "Virtual size" }), value: `${vsize} ${t("graph.technical.vb", { defaultValue: "vB" })}` },
-    { label: t("graph.technical.fee", { defaultValue: "Fee" }), value: formatSats(tx.fee) },
-    { label: t("graph.technical.feeRate", { defaultValue: "Fee rate" }), value: `${feeRate} ${t("graph.technical.satVb", { defaultValue: "sat/vB" })}` },
-    { label: t("graph.technical.segwit", { defaultValue: "SegWit" }), value: hasSegwit ? "Yes" : "No" },
-    { label: t("graph.technical.taproot", { defaultValue: "Taproot" }), value: hasTaproot ? "Yes" : "No" },
-    { label: t("graph.technical.rbfSignaling", { defaultValue: "RBF signaling" }), value: isRbf ? t("graph.technical.rbfYes", { defaultValue: "Yes (BIP125)" }) : "No", highlight: isRbf },
-    { label: t("graph.technical.confirmed", { defaultValue: "Confirmed" }), value: tx.status?.confirmed ? t("graph.technical.confirmedBlock", { height: tx.status.block_height, defaultValue: "Block {{height}}" }) : t("graph.technical.unconfirmed", { defaultValue: "Unconfirmed" }), highlight: !tx.status?.confirmed },
+    { label: "Version", value: tx.version },
+    { label: "Locktime", value: tx.locktime === 0 ? "0 (none)" : tx.locktime < 500_000_000 ? `${tx.locktime} (block height)` : `${tx.locktime} (timestamp)` },
+    { label: "Size", value: `${tx.size} bytes` },
+    { label: "Weight", value: `${tx.weight} WU` },
+    { label: "Virtual size", value: `${vsize} vB` },
+    { label: "Fee", value: formatSats(tx.fee) },
+    { label: "Fee rate", value: `${feeRate} sat/vB` },
+    { label: "SegWit", value: hasSegwit ? "Yes" : "No" },
+    { label: "Taproot", value: hasTaproot ? "Yes" : "No" },
+    { label: "RBF signaling", value: isRbf ? "Yes (BIP125)" : "No", highlight: isRbf },
+    { label: "Confirmed", value: tx.status?.confirmed ? `Block ${tx.status.block_height}` : "Unconfirmed", highlight: !tx.status?.confirmed },
   ];
 
   return (

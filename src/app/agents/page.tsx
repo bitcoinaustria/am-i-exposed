@@ -11,16 +11,6 @@ import {
 } from "lucide-react";
 import { PageShell } from "@/components/PageShell";
 import { CopyButton } from "@/components/ui/CopyButton";
-import {
-  TOOLS,
-  WORKFLOWS,
-  MCP_CONFIG,
-  JSON_EXAMPLE,
-  GRADES,
-  PERF_ROWS,
-  PRIVACY_POINTS,
-  FOOTER_LINKS,
-} from "@/data/agents";
 
 function CodeBlock({ code, lang = "bash" }: { code: string; lang?: string }) {
   return (
@@ -34,6 +24,73 @@ function CodeBlock({ code, lang = "bash" }: { code: string; lang?: string }) {
     </div>
   );
 }
+
+const TOOLS = [
+  {
+    name: "scan_transaction",
+    desc: "Run 25 privacy heuristics on a transaction. Detects CoinJoin, change outputs, wallet fingerprints, entity matches, and more.",
+    example: 'am-i-exposed scan tx 323df21f...dec2 --json',
+  },
+  {
+    name: "scan_address",
+    desc: "Check address reuse, UTXO hygiene, spending patterns, entity identification, and temporal correlation.",
+    example: 'am-i-exposed scan address bc1q... --json',
+  },
+  {
+    name: "scan_psbt",
+    desc: "Analyze an unsigned transaction BEFORE broadcasting. Zero network access needed. The key tool for privacy-aware transaction crafting.",
+    example: 'am-i-exposed scan psbt /tmp/proposed-tx.psbt --json',
+  },
+  {
+    name: "scan_wallet",
+    desc: "Wallet-level privacy audit via xpub/zpub/descriptor. Derives addresses, scans activity, checks reuse and UTXO hygiene.",
+    example: 'am-i-exposed scan xpub zpub6r... --json --gap-limit 30',
+  },
+  {
+    name: "compute_boltzmann",
+    desc: "Compute Boltzmann entropy, wallet efficiency, and the full link probability matrix. Auto-detects WabiSabi and JoinMarket for turbo mode.",
+    example: 'am-i-exposed boltzmann 323df21f...dec2 --json',
+  },
+];
+
+const WORKFLOWS = [
+  {
+    title: "Pre-broadcast privacy check",
+    steps: [
+      "Craft a transaction in your wallet, export as PSBT",
+      "Run: am-i-exposed scan psbt <file> --json",
+      'Check .grade - if D or F, modify coin selection',
+      "Repeat until grade is B or better, then sign and broadcast",
+    ],
+  },
+  {
+    title: "Wallet health audit",
+    steps: [
+      "Export your xpub/zpub from wallet software",
+      "Run: am-i-exposed scan xpub <key> --json --gap-limit 30",
+      "Check reusedAddresses (should be 0) and dustUtxos (should be 0)",
+      "Review findings for consolidation history and script type mixing",
+    ],
+  },
+  {
+    title: "Transaction forensics",
+    steps: [
+      "Run: am-i-exposed scan tx <txid> --json",
+      "Check grade and txType for quick assessment",
+      "For deeper analysis: am-i-exposed chain-trace <txid> --depth 3 --json",
+      "Review entity proximity and taint findings",
+    ],
+  },
+];
+
+const MCP_CONFIG = `{
+  "mcpServers": {
+    "bitcoin-privacy": {
+      "command": "npx",
+      "args": ["-y", "am-i-exposed", "mcp"]
+    }
+  }
+}`;
 
 export default function AgentsPage() {
   return (
@@ -76,8 +133,13 @@ export default function AgentsPage() {
           </h2>
           <div className="space-y-4">
             {TOOLS.map((tool) => (
-              <div key={tool.name} className="border border-card-border/50 rounded-lg p-4 space-y-2">
-                <h3 className="font-mono text-sm font-semibold text-severity-good">{tool.name}</h3>
+              <div
+                key={tool.name}
+                className="border border-card-border/50 rounded-lg p-4 space-y-2"
+              >
+                <h3 className="font-mono text-sm font-semibold text-severity-good">
+                  {tool.name}
+                </h3>
                 <p className="text-muted text-sm">{tool.desc}</p>
                 <CodeBlock code={tool.example} />
               </div>
@@ -94,9 +156,35 @@ export default function AgentsPage() {
           <p className="text-muted">
             All commands with <code className="text-foreground">--json</code> return a consistent envelope:
           </p>
-          <CodeBlock lang="json" code={JSON_EXAMPLE} />
+          <CodeBlock
+            lang="json"
+            code={`{
+  "score": 95,
+  "grade": "A+",
+  "txType": "whirlpool-coinjoin",
+  "findings": [
+    {
+      "id": "h4-whirlpool",
+      "severity": "good",
+      "title": "Whirlpool CoinJoin detected",
+      "scoreImpact": 30,
+      "confidence": "deterministic"
+    }
+  ],
+  "recommendation": {
+    "urgency": "when-convenient",
+    "headline": "Maintain UTXO separation"
+  }
+}`}
+          />
           <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 text-center text-sm">
-            {GRADES.map((g) => (
+            {[
+              { grade: "A+", range: "90-100", color: "text-severity-good" },
+              { grade: "B", range: "75-89", color: "text-severity-low" },
+              { grade: "C", range: "50-74", color: "text-severity-medium" },
+              { grade: "D", range: "25-49", color: "text-severity-high" },
+              { grade: "F", range: "0-24", color: "text-severity-critical" },
+            ].map((g) => (
               <div key={g.grade} className="border border-card-border/50 rounded-lg p-2">
                 <div className={`text-lg font-bold ${g.color}`}>{g.grade}</div>
                 <div className="text-muted text-xs">{g.range}</div>
@@ -113,13 +201,20 @@ export default function AgentsPage() {
           </h2>
           <p className="text-muted">
             For AI agents that support{" "}
-            <a href="https://modelcontextprotocol.io" target="_blank" rel="noopener noreferrer" className="text-foreground underline underline-offset-2">
+            <a
+              href="https://modelcontextprotocol.io"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-foreground underline underline-offset-2"
+            >
               Model Context Protocol
             </a>
             {" "} - structured tool calls over stdio instead of parsing CLI output.
           </p>
           <CodeBlock code="am-i-exposed mcp" />
-          <p className="text-muted text-sm">Claude Desktop configuration:</p>
+          <p className="text-muted text-sm">
+            Claude Desktop configuration:
+          </p>
           <CodeBlock lang="json" code={MCP_CONFIG} />
           <p className="text-muted text-sm">
             Exposes the same 5 tools with typed input schemas (zod validation).
@@ -135,7 +230,10 @@ export default function AgentsPage() {
           </h2>
           <div className="space-y-4">
             {WORKFLOWS.map((wf) => (
-              <div key={wf.title} className="border border-card-border/50 rounded-lg p-4 space-y-3">
+              <div
+                key={wf.title}
+                className="border border-card-border/50 rounded-lg p-4 space-y-3"
+              >
                 <h3 className="font-semibold text-foreground">{wf.title}</h3>
                 <ol className="list-decimal list-inside space-y-1.5 text-muted text-sm">
                   {wf.steps.map((step, i) => (
@@ -163,13 +261,31 @@ export default function AgentsPage() {
                 </tr>
               </thead>
               <tbody className="text-muted">
-                {PERF_ROWS.map((row, i) => (
-                  <tr key={row.mode} className={i < PERF_ROWS.length - 1 ? "border-b border-card-border/30" : ""}>
-                    <td className="py-2 pr-4 text-foreground">{row.mode}</td>
-                    <td className={`py-2 pr-4 ${row.timeColor ?? ""}`}>{row.time}</td>
-                    <td className="py-2">{row.notes}</td>
-                  </tr>
-                ))}
+                <tr className="border-b border-card-border/30">
+                  <td className="py-2 pr-4 text-foreground">Normal scan</td>
+                  <td className="py-2 pr-4">~10s</td>
+                  <td className="py-2">Full context (parent txs + output addresses)</td>
+                </tr>
+                <tr className="border-b border-card-border/30">
+                  <td className="py-2 pr-4 text-foreground">--fast</td>
+                  <td className="py-2 pr-4">~6s</td>
+                  <td className="py-2">Skip context fetching, all heuristics still run</td>
+                </tr>
+                <tr className="border-b border-card-border/30">
+                  <td className="py-2 pr-4 text-foreground">Cached (repeat)</td>
+                  <td className="py-2 pr-4 text-severity-good">~1.5s</td>
+                  <td className="py-2">SQLite cache, instant on second scan</td>
+                </tr>
+                <tr className="border-b border-card-border/30">
+                  <td className="py-2 pr-4 text-foreground">PSBT (offline)</td>
+                  <td className="py-2 pr-4 text-severity-good">&lt;1s</td>
+                  <td className="py-2">Zero network access needed</td>
+                </tr>
+                <tr>
+                  <td className="py-2 pr-4 text-foreground">Boltzmann</td>
+                  <td className="py-2 pr-4">2-15ms</td>
+                  <td className="py-2">Rust/WASM, turbo modes for WabiSabi/JoinMarket</td>
+                </tr>
               </tbody>
             </table>
           </div>
@@ -182,20 +298,49 @@ export default function AgentsPage() {
             Privacy
           </h2>
           <ul className="list-disc list-inside space-y-1.5 text-muted text-sm">
-            {PRIVACY_POINTS.map((point) => (
-              <li key={point}>{point}</li>
-            ))}
+            <li>No addresses or transactions are logged or persisted by the CLI</li>
+            <li>Entity detection uses bundled data files (~92 MB), no external APIs</li>
+            <li>PSBT analysis requires zero network access</li>
+            <li>Only mempool.space API is used for blockchain data (or your custom endpoint)</li>
+            <li>All analysis runs locally on your machine</li>
             <li>Self-host with <code className="text-foreground">--api</code> flag pointed at your own mempool instance</li>
           </ul>
         </section>
 
         {/* Links */}
         <section className="border-t border-card-border/50 pt-6 flex flex-wrap gap-4 text-sm">
-          {FOOTER_LINKS.map((link) => (
-            <a key={link.href} href={link.href} target="_blank" rel="noopener noreferrer" className="text-muted hover:text-foreground underline underline-offset-2">
-              {link.label}
-            </a>
-          ))}
+          <a
+            href="https://github.com/Copexit/am-i-exposed/blob/main/cli/skill.md"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-muted hover:text-foreground underline underline-offset-2"
+          >
+            skill.md (full docs)
+          </a>
+          <a
+            href="https://github.com/Copexit/am-i-exposed/tree/main/cli"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-muted hover:text-foreground underline underline-offset-2"
+          >
+            CLI source code
+          </a>
+          <a
+            href="https://github.com/Copexit/am-i-exposed/blob/main/docs/spec-cli-tool.md"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-muted hover:text-foreground underline underline-offset-2"
+          >
+            Full spec
+          </a>
+          <a
+            href="https://www.npmjs.com/package/am-i-exposed"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-muted hover:text-foreground underline underline-offset-2"
+          >
+            npm package
+          </a>
         </section>
     </PageShell>
   );

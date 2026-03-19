@@ -31,8 +31,6 @@ import {
   analyzePostMix,
   analyzeEntityDetection,
   analyzeRicochet,
-  analyzeUtxoAgeSpread,
-  analyzeDustSpending,
 } from "./heuristics";
 
 // --- Transaction heuristics ---
@@ -51,7 +49,6 @@ export const TX_HEURISTICS = [
   { id: "timing", label: "Timing analysis", fn: analyzeTiming },
   { id: "script", label: "Script type analysis", fn: analyzeScriptTypeMix },
   { id: "dust", label: "Dust output detection", fn: analyzeDustOutputs },
-  { id: "dust-spend", label: "Dust spending detection", fn: analyzeDustSpending },
   { id: "h17", label: "Multisig/escrow detection", fn: analyzeMultisigDetection },
   { id: "peel", label: "Peel chain detection", fn: analyzePeelChain },
   { id: "consolidation", label: "Consolidation patterns", fn: analyzeConsolidation },
@@ -65,7 +62,6 @@ export const TX_HEURISTICS = [
   { id: "postmix", label: "Post-mix consolidation", fn: analyzePostMix },
   { id: "entity", label: "Known entity detection", fn: analyzeEntityDetection },
   { id: "ricochet", label: "Ricochet detection", fn: analyzeRicochet },
-  { id: "utxo-age", label: "UTXO age spread", fn: analyzeUtxoAgeSpread },
 ] as const;
 
 export const ADDRESS_HEURISTICS = [

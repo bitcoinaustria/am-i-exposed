@@ -12,7 +12,6 @@ import { calculateScore, sumImpact } from "@/lib/scoring/score";
 import { matchEntitySync } from "./entity-filter/entity-match";
 import { getEntity } from "./entities";
 import { applyCrossHeuristicRules, classifyTransactionType } from "./cross-heuristic";
-import { enrichFindingsWithMetadata } from "./finding-metadata";
 import { TX_HEURISTICS, ADDRESS_HEURISTICS, tick } from "./heuristic-registry";
 
 // Re-export from heuristic-registry so existing consumers don't break
@@ -100,9 +99,6 @@ export async function analyzeTransaction(
 
   // Cross-heuristic intelligence
   applyCrossHeuristicRules(allFindings);
-
-  // Enrich with adversary tier and temporality metadata
-  enrichFindingsWithMetadata(allFindings);
 
   const result = calculateScore(allFindings);
   result.txType = classifyTransactionType(allFindings);
@@ -213,9 +209,6 @@ export async function analyzeAddress(
       scoreImpact: 0,
     });
   }
-
-  // Enrich with adversary tier and temporality metadata
-  enrichFindingsWithMetadata(allFindings);
 
   return calculateScore(allFindings, "address");
 }

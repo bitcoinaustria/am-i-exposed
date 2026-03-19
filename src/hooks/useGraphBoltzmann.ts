@@ -18,8 +18,6 @@ interface UseGraphBoltzmannReturn {
   getBoltzmannResult: (txid: string) => BoltzmannWorkerResult | undefined;
   triggerBoltzmann: (txid: string) => Promise<void>;
   computingBoltzmannRef: React.RefObject<Set<string>>;
-  /** Render-safe snapshot of computing txids (updates via state version bump). */
-  computingBoltzmann: Set<string>;
   boltzmannProgressMap: Map<string, number>;
   /** The raw cache map, for passing to components that expect Map<string, BoltzmannWorkerResult>. */
   boltzmannCache: Map<string, BoltzmannWorkerResult>;
@@ -115,10 +113,9 @@ export function useGraphBoltzmann({
     await computeSingleBoltzmann(txid, ac.signal);
   }, [computeSingleBoltzmann]);
 
-  // Eagerly compute Boltzmann for ALL nodes in the graph whenever the graph changes.
-  // Debounced by 300ms so rapid node additions (e.g. auto-trace) don't cause WASM churn.
+  // Eagerly compute Boltzmann for ALL nodes in the graph whenever the graph changes
   useEffect(() => {
-    // First pass (synchronous): instantly fill synthetic results for all 1-input txs
+    // First pass: instantly fill synthetic results for all 1-input txs
     let anyNew = false;
     for (const [txid, node] of nodes) {
       if (boltzmannCacheRef.current.has(txid)) continue;
@@ -132,49 +129,44 @@ export function useGraphBoltzmann({
     }
     if (anyNew) setBoltzmannVersion((v) => v + 1);
 
-    // Second pass (debounced): async compute for auto-computable multi-input txs
-    const debounceTimer = setTimeout(() => {
-      // Abort previous computation cycle before starting a new one
-      boltzmannAbortRef.current?.abort();
-      const ac = new AbortController();
-      boltzmannAbortRef.current = ac;
+    // Second pass: async compute for auto-computable multi-input txs (sequential)
+    // Abort previous computation cycle before starting a new one
+    boltzmannAbortRef.current?.abort();
+    const ac = new AbortController();
+    boltzmannAbortRef.current = ac;
 
-      // Build queue of eligible txids (snapshot - stable across the async loop)
-      const queue: Array<{ txid: string; tx: MempoolTransaction }> = [];
-      for (const [txid, node] of nodes) {
-        if (boltzmannCacheRef.current.has(txid)) continue;
-        if (computingBoltzmannRef.current.has(txid)) continue;
+    // Build queue of eligible txids (snapshot - stable across the async loop)
+    const queue: Array<{ txid: string; tx: MempoolTransaction }> = [];
+    for (const [txid, node] of nodes) {
+      if (boltzmannCacheRef.current.has(txid)) continue;
+      if (computingBoltzmannRef.current.has(txid)) continue;
 
-        const tx = node.tx;
-        const eligibility = getBoltzmannEligibility(tx, 80);
-        if (!eligibility.canCompute) continue;
+      const tx = node.tx;
+      const eligibility = getBoltzmannEligibility(tx, 80);
+      if (!eligibility.canCompute) continue;
 
-        const { inputValues, outputValues } = eligibility;
-        if (inputValues.length < 2) continue;
-        const total = inputValues.length + outputValues.length;
-        if (total >= 18) {
-          if (total >= 24) continue;
-          if (!detectJoinMarketForTurbo(inputValues, outputValues).isJoinMarket) continue;
+      const { inputValues, outputValues } = eligibility;
+      if (inputValues.length < 2) continue;
+      const total = inputValues.length + outputValues.length;
+      if (total >= 18) {
+        if (total >= 24) continue;
+        if (!detectJoinMarketForTurbo(inputValues, outputValues).isJoinMarket) continue;
+      }
+
+      queue.push({ txid, tx });
+    }
+
+    // Process queue sequentially with abort signal
+    if (queue.length > 0) {
+      (async () => {
+        for (const { txid } of queue) {
+          if (ac.signal.aborted) break;
+          await computeSingleBoltzmann(txid, ac.signal);
         }
+      })();
+    }
 
-        queue.push({ txid, tx });
-      }
-
-      // Process queue sequentially with abort signal
-      if (queue.length > 0) {
-        (async () => {
-          for (const { txid } of queue) {
-            if (ac.signal.aborted) break;
-            await computeSingleBoltzmann(txid, ac.signal);
-          }
-        })();
-      }
-    }, 300);
-
-    return () => {
-      clearTimeout(debounceTimer);
-      boltzmannAbortRef.current?.abort();
-    };
+    return () => { ac.abort(); };
   }, [nodes, computeSingleBoltzmann]);
 
   /** Get Boltzmann result for a txid (from cache or root result). */
@@ -192,18 +184,10 @@ export function useGraphBoltzmann({
     [boltzmannVersion],
   );
 
-  // Render-safe snapshot of the computing set (re-created when computing version changes).
-  const computingBoltzmann = useMemo(
-    () => new Set(computingBoltzmannRef.current),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [_computingBoltzmannVersion],
-  );
-
   return {
     getBoltzmannResult,
     triggerBoltzmann,
     computingBoltzmannRef,
-    computingBoltzmann,
     boltzmannProgressMap,
     boltzmannCache,
   };
