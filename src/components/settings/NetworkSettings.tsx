@@ -148,7 +148,7 @@ export function NetworkSettings({ onClosePanel }: NetworkSettingsProps) {
               }
               setErrorHint("");
             }}
-            placeholder="https://mempool.space/api"
+            placeholder="https://mempool.bitcoin-austria.at/api"
             aria-label={t("settings.apiInputLabel", { defaultValue: "Custom mempool API URL" })}
             className="flex-1 bg-surface-inset border border-card-border rounded-lg px-3 py-2.5 text-sm text-foreground font-mono placeholder:text-muted/70 focus-visible:border-bitcoin/50"
           />
