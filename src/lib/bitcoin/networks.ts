@@ -16,8 +16,8 @@ export const NETWORK_CONFIG: Record<BitcoinNetwork, NetworkConfig> = {
   },
   testnet4: {
     label: "Testnet4",
-    mempoolBaseUrl: "https://mempool.bitcoin-austria.at/testnet4/api",
-    explorerUrl: "https://mempool.bitcoin-austria.at/testnet4",
+    mempoolBaseUrl: "https://mempool.space/testnet4/api",
+    explorerUrl: "https://mempool.space/testnet4",
   },
   testnet3: {
     label: "Testnet3",
@@ -26,8 +26,8 @@ export const NETWORK_CONFIG: Record<BitcoinNetwork, NetworkConfig> = {
   },
   signet: {
     label: "Signet",
-    mempoolBaseUrl: "https://mempool.bitcoin-austria.at/signet/api",
-    explorerUrl: "https://mempool.bitcoin-austria.at/signet",
+    mempoolBaseUrl: "https://mempool.space/signet/api",
+    explorerUrl: "https://mempool.space/signet",
   },
 };
 
