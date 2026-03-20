@@ -86,6 +86,8 @@ scripts/glossary-capture.mjs
 !.cache/entity-data/curated/ransomware-addresses.csv
 !.cache/entity-data/curated/scam-ponzi-addresses.csv
 scripts/*.py
+scripts/fetch-repo-traffic.sh
+docs/repo_traffic.csv
 public/data/entity-filter-full.bin
 public/data/entity-index-full.bin
 
