@@ -79,12 +79,14 @@ export default function GraphPage() {
       const hash = window.location.hash.slice(1);
       const match = hash.match(/^txid=([a-fA-F0-9]{64})$/);
       if (match) {
-        loadTxid(match[1]);
+        const example = TX_EXAMPLES.find((e) => e.input.toLowerCase() === match[1].toLowerCase());
+        loadTxid(match[1], example?.labelDefault);
       } else if (!rootTxid) {
         // No hash and no root - pick random example
         const example = TX_EXAMPLES[Math.floor(Math.random() * TX_EXAMPLES.length)];
         if (example) {
           window.location.hash = `txid=${example.input}`;
+          loadTxid(example.input, example.labelDefault);
         }
       }
     };

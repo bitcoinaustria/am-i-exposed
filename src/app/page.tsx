@@ -24,6 +24,7 @@ import { EXAMPLES } from "@/lib/constants";
 import { formatSats } from "@/lib/format";
 import { useKeyboardNav } from "@/hooks/useKeyboardNav";
 import { useDevMode } from "@/hooks/useDevMode";
+import { useExperienceMode } from "@/hooks/useExperienceMode";
 import { XpubPrivacyWarning, isXpubPrivacyAcked } from "@/components/wallet/XpubPrivacyWarning";
 const TipToast = lazy(() => import("@/components/TipToast").then(m => ({ default: m.TipToast })));
 const DevChainalysisPanel = lazy(() => import("@/components/DevChainalysisPanel").then(m => ({ default: m.DevChainalysisPanel })));
@@ -63,6 +64,7 @@ export default function Home() {
   const { scans, addScan, clearScans } = useRecentScans();
   const { bookmarks, removeBookmark, clearBookmarks, exportBookmarks, importBookmarks } = useBookmarks();
   const { devMode } = useDevMode();
+  const { proMode } = useExperienceMode();
   const inputRef = useRef<HTMLInputElement>(null);
   const [pendingXpub, setPendingXpub] = useState<string | null>(null);
 
@@ -359,14 +361,14 @@ export default function Home() {
 
             <ScanHistory
               scans={scans}
-              bookmarks={bookmarks}
+              bookmarks={proMode ? bookmarks : []}
               examples={EXAMPLES}
               onSelect={handleSubmit}
               onClearScans={clearScans}
               onRemoveBookmark={removeBookmark}
               onClearBookmarks={clearBookmarks}
-              onExportBookmarks={exportBookmarks}
-              onImportBookmarks={importBookmarks}
+              onExportBookmarks={proMode ? exportBookmarks : undefined}
+              onImportBookmarks={proMode ? importBookmarks : undefined}
             />
 
             {devMode && (
