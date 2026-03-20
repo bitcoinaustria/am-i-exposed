@@ -243,12 +243,13 @@ export function GraphExplorer(props: GraphExplorerProps) {
     setViewTransform(computeFitTransform(gw, gh, cw, ch));
   }, [props.nodes, props.rootTxid, filter, props.rootTxids]);
 
-  // Auto-center root node on mount in alwaysFullscreen mode
-  const didAutoCenter = useRef(false);
+  // Auto-center root node when rootTxid changes in alwaysFullscreen mode
+  const lastCenteredRoot = useRef<string>("");
   useEffect(() => {
-    if (!props.alwaysFullscreen || didAutoCenter.current || props.nodes.size === 0) return;
-    didAutoCenter.current = true;
-    // Delay to let the layout compute after first render
+    if (!props.alwaysFullscreen || !props.rootTxid || props.nodes.size === 0) return;
+    if (lastCenteredRoot.current === props.rootTxid) return;
+    lastCenteredRoot.current = props.rootTxid;
+    // Delay to let the DOM render the canvas at its final size
     const timer = setTimeout(() => {
       const { layoutNodes: ln } = layoutGraph(props.nodes, props.rootTxid, filter, props.rootTxids);
       const roots = ln.filter((n) => n.isRoot);
@@ -259,7 +260,7 @@ export function GraphExplorer(props: GraphExplorerProps) {
         const avgY = roots.reduce((s, n) => s + n.y + n.height / 2, 0) / roots.length;
         setViewTransform({ x: cw / 2 - avgX, y: ch / 2 - avgY, scale: 1 });
       }
-    }, 100);
+    }, 300);
     return () => clearTimeout(timer);
   }, [props.alwaysFullscreen, props.nodes, props.rootTxid, filter, props.rootTxids]);
 
