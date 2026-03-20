@@ -15,7 +15,6 @@ import { analyzeChangeDetection } from "@/lib/analysis/heuristics/change-detecti
 import { GraphSidebar, SIDEBAR_WIDTH } from "./graph/GraphSidebar";
 import { ENTITY_CATEGORY_COLORS, MAX_ZOOM, MIN_ZOOM } from "./graph/constants";
 import { layoutGraph } from "./graph/layout";
-import { computeFitTransform } from "./graph/edge-utils";
 import { GraphCanvas } from "./graph/GraphCanvas";
 import { CloseIcon } from "./graph/icons";
 import { GraphToolbar } from "./graph/GraphToolbar";
