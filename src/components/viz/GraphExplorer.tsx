@@ -66,17 +66,9 @@ export function GraphExplorer(props: GraphExplorerProps) {
   // Edge coloring mode: mutually exclusive. Only one active at a time.
   type EdgeMode = "default" | "linkability" | "entropy";
   const [edgeMode, setEdgeMode] = useState<EdgeMode>("default");
-  const hasLinkability = !!props.rootBoltzmannResult;
+  // hasLinkability is set after useGraphBoltzmann below (needs boltzmannCache)
   const linkabilityEdgeMode = edgeMode === "linkability";
   const entropyGradientMode = edgeMode === "entropy";
-
-  const cycleEdgeMode = useCallback(() => {
-    setEdgeMode((prev) => {
-      if (prev === "default") return hasLinkability ? "linkability" : "entropy";
-      if (prev === "linkability") return "entropy";
-      return "default";
-    });
-  }, [hasLinkability]);
 
   // Heat map state
   const [heatMapActive, setHeatMapActive] = useState(false);
@@ -157,6 +149,15 @@ export function GraphExplorer(props: GraphExplorerProps) {
     rootTxid: props.rootTxid,
     rootBoltzmannResult: props.rootBoltzmannResult,
   });
+
+  const hasLinkability = !!props.rootBoltzmannResult || boltzmannCache.size > 0;
+  const cycleEdgeMode = useCallback(() => {
+    setEdgeMode((prev) => {
+      if (prev === "default") return hasLinkability ? "linkability" : "entropy";
+      if (prev === "linkability") return "entropy";
+      return "default";
+    });
+  }, [hasLinkability]);
 
   // Zoom toward center helper
   const zoomBy = useCallback((factor: number) => {
