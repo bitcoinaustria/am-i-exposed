@@ -969,10 +969,19 @@ export function GraphCanvas({
         </g>
       </svg>
 
-      {/* Minimap - only in fullscreen */}
+      {/* Minimap - only in fullscreen, hidden when all nodes fit in viewport */}
       {isFullscreen && (() => {
         const actualW = svgDims?.width ?? containerWidth;
         const actualH = svgDims?.height ?? (containerHeight ?? 600);
+        // Compute tight node bounds to decide if minimap is needed
+        const nodesMinX = layoutNodes.length > 0 ? Math.min(...layoutNodes.map((n) => n.x)) : 0;
+        const nodesMaxX = layoutNodes.length > 0 ? Math.max(...layoutNodes.map((n) => n.x + n.width)) : 0;
+        const nodesMaxY = layoutNodes.length > 0 ? Math.max(...layoutNodes.map((n) => n.y + n.height)) : 0;
+        const nodesW = nodesMaxX - nodesMinX;
+        const nodesH = nodesMaxY;
+        const vScale = viewTransform?.scale ?? 1;
+        // Hide minimap when all nodes fit within the viewport at current zoom
+        if (nodesW * vScale < actualW && nodesH * vScale < actualH) return null;
         return (
           <GraphMinimap
             layoutNodes={layoutNodes}
