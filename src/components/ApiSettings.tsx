@@ -19,6 +19,7 @@ import {
 import { NetworkSettings } from "@/components/settings/NetworkSettings";
 import { AnalysisSettingsPanel } from "@/components/settings/AnalysisSettingsPanel";
 import { CacheSettingsPanel } from "@/components/settings/CacheSettingsPanel";
+import { WorkspaceSettingsPanel } from "@/components/settings/WorkspaceSettingsPanel";
 import { LocaleSelector } from "@/components/settings/LocaleSelector";
 import { useExperienceMode } from "@/hooks/useExperienceMode";
 import { useTheme } from "@/hooks/useTheme";
@@ -188,6 +189,9 @@ export function ApiSettings() {
 
           {/* Cache settings (Pro only) */}
           {proMode && <CacheSettingsPanel />}
+
+          {/* Workspace export/import */}
+          <WorkspaceSettingsPanel />
 
           {/* Entity filter status */}
           <EntityFilterStatus t={t} proMode={proMode} />
