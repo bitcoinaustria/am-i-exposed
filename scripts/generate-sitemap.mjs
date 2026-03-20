@@ -5,7 +5,6 @@ import { writeFileSync } from "fs";
 
 const PAGES = [
   { path: "/", priority: "1.0", changefreq: "weekly", source: "src/app/page.tsx" },
-  { path: "/methodology/", priority: "0.8", changefreq: "monthly", source: "src/app/methodology/page.tsx" },
   { path: "/setup-guide/", priority: "0.7", changefreq: "monthly", source: "src/app/setup-guide/page.tsx" },
   { path: "/about/", priority: "0.6", changefreq: "monthly", source: "src/app/about/page.tsx" },
   { path: "/faq/", priority: "0.7", changefreq: "monthly", source: "src/app/faq/page.tsx" },

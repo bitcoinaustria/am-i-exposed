@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, ExternalLink } from "lucide-react";
 import { PageShell } from "@/components/PageShell";
 import { KnowledgeTabBar } from "@/components/KnowledgeTabBar";
 import { useTranslation } from "react-i18next";
@@ -202,12 +202,15 @@ export default function FaqPage() {
             {t("faq.cta", { defaultValue: "Still have questions? Check the methodology or scan a transaction to see for yourself." })}
           </p>
           <div className="flex flex-wrap justify-center gap-3">
-            <Link
-              href="/methodology"
-              className="text-sm px-4 py-2.5 rounded-lg bg-surface-elevated border border-card-border text-foreground hover:border-bitcoin/30 transition-all"
+            <a
+              href="https://github.com/Copexit/am-i-exposed/blob/main/docs/privacy-engine.md"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 text-sm px-4 py-2.5 rounded-lg bg-surface-elevated border border-card-border text-foreground hover:border-bitcoin/30 transition-all"
             >
               {t("common.methodology", { defaultValue: "Methodology" })}
-            </Link>
+              <ExternalLink size={12} className="text-muted" />
+            </a>
             <Link
               href="/"
               className="text-sm px-4 py-2.5 rounded-lg bg-bitcoin text-background font-semibold hover:bg-bitcoin-hover transition-all"

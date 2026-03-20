@@ -19,6 +19,8 @@ import {
   Server,
   BookOpen,
   HardDrive,
+  ExternalLink,
+  ScrollText,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { PageShell } from "@/components/PageShell";
@@ -212,19 +214,29 @@ export default function AboutPage() {
                 <Code size={16} />
                 {t("about.github_link", { defaultValue: "GitHub Repository" })}
               </a>
-              <Link
-                href="/methodology"
+              <a
+                href="https://github.com/Copexit/am-i-exposed/blob/main/docs/privacy-engine.md"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="inline-flex items-center gap-1.5 text-sm px-4 py-2.5 rounded-lg bg-surface-elevated border border-card-border text-foreground hover:border-bitcoin/30 transition-all"
               >
                 <Shield size={16} />
-                {t("about.methodology_link", { defaultValue: "Read the Methodology" })}
-              </Link>
+                {t("about.methodology_link", { defaultValue: "Technical Reference" })}
+                <ExternalLink size={12} className="text-muted" />
+              </a>
               <Link
                 href="/guide"
                 className="inline-flex items-center gap-1.5 text-sm px-4 py-2.5 rounded-lg bg-surface-elevated border border-card-border text-foreground hover:border-bitcoin/30 transition-all"
               >
                 <BookOpen size={16} />
                 {t("about.guide_link", { defaultValue: "Privacy Guide" })}
+              </Link>
+              <Link
+                href="/welcome"
+                className="inline-flex items-center gap-1.5 text-sm px-4 py-2.5 rounded-lg bg-surface-elevated border border-card-border text-foreground hover:border-bitcoin/30 transition-all"
+              >
+                <ScrollText size={16} />
+                {t("about.welcome_link", { defaultValue: "Why This Exists" })}
               </Link>
             </div>
           </div>
@@ -236,12 +248,15 @@ export default function AboutPage() {
             {t("about.cta", { defaultValue: "Ready to check your privacy? Scan a transaction or address to see what chain analysis can infer." })}
           </p>
           <div className="flex flex-wrap justify-center gap-3">
-            <Link
-              href="/methodology"
-              className="text-sm px-4 py-2.5 rounded-lg bg-surface-elevated border border-card-border text-foreground hover:border-bitcoin/30 transition-all"
+            <a
+              href="https://github.com/Copexit/am-i-exposed/blob/main/docs/privacy-engine.md"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 text-sm px-4 py-2.5 rounded-lg bg-surface-elevated border border-card-border text-foreground hover:border-bitcoin/30 transition-all"
             >
-              {t("common.methodology", { defaultValue: "Methodology" })}
-            </Link>
+              {t("about.methodology_link", { defaultValue: "Technical Reference" })}
+              <ExternalLink size={12} className="text-muted" />
+            </a>
             <Link
               href="/"
               className="text-sm px-4 py-2.5 rounded-lg bg-bitcoin text-background font-semibold hover:bg-bitcoin-hover transition-all"

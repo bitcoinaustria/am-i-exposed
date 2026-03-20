@@ -19,9 +19,9 @@ Key concepts adopted from SIP-001:
 
 - **CHANGE_REUSE as distinct finding.** Change reuse (sending change to a previously-funded address) directly collapses two transaction histories. am-i-exposed detects both signals independently but doesn't escalate their intersection.
 
-- **BEHAVIORAL_FINGERPRINT rollup.** A compound finding that fires when >=2 behavioral sub-signals (fee rate, RBF, output ordering, amount patterns) co-occur, escalating to CRITICAL at >=4. am-i-exposed has all sub-signals across 5 heuristics but no rollup mechanism.
+- **BEHAVIORAL_FINGERPRINT rollup.** A compound finding that fires when >=2 behavioral sub-signals (fee rate, RBF, output ordering, amount patterns) co-occur, escalating to CRITICAL at >=4. am-i-exposed implements this as `applyBehavioralRollup()` in cross-heuristic.ts, emitting a compound finding at 2+ signals and escalating to critical at 4+.
 
-- **UTXO_AGE_SPREAD.** Flagging when co-spent UTXOs have vastly different creation heights reveals dormancy patterns to chain analysts.
+- **UTXO_AGE_SPREAD.** Flagging when co-spent UTXOs have vastly different creation heights reveals dormancy patterns to chain analysts. This is now implemented as `utxo-age-spread.ts`, detecting co-spent UTXOs with creation heights spanning 1+ years.
 
 These concepts are adapted to am-i-exposed's client-side, API-based architecture (vs. SIP-001's full-node, descriptor-native design), centralized in a metadata registry rather than embedded per-finding, and extended with am-i-exposed's existing cross-heuristic intelligence.
 
@@ -153,13 +153,15 @@ Dynamic finding IDs (e.g., `h7-op-return-0`, `h7-op-return-1`) fall back to pref
 | `h8-address-reuse` | passive, kyc, state | ongoing_pattern | Stop reusing = stop bleeding |
 | `h8-no-reuse`, `h8-reuse-uncertain`, `h8-batch-receive` | passive | ongoing_pattern | Informational |
 | `h9-dust-detected` | passive, state | active_risk | Unspent dust UTXOs, actionable now |
-| `h9-many-utxos`, `h9-moderate-utxos` | passive, state | active_risk | UTXO set fragmentation risk |
+| `h9-many-utxos` | passive, state | active_risk | UTXO set fragmentation risk (state-level tracking for large sets) |
+| `h9-moderate-utxos` | passive | active_risk | Moderate UTXO count, visible to any observer |
 | `h9-clean` | passive | ongoing_pattern | Positive finding (clean set) |
 | `h10-p2tr`, `h10-p2wpkh`, `h10-p2wsh`, `h10-p2sh`, `h10-p2pkh` | passive | ongoing_pattern | Address type migration possible |
 | `spending-high-volume` | kyc, state | ongoing_pattern | High volume behavioral pattern |
 | `spending-many-counterparties` | passive, kyc | ongoing_pattern | Counterparty diversity pattern |
 | `spending-never-spent` | passive | active_risk | HODLer pattern (informational) |
-| `high-activity-exchange`, `high-activity-service`, `high-activity-moderate` | kyc, state | ongoing_pattern | Activity pattern analysis |
+| `high-activity-exchange`, `high-activity-service` | kyc, state | ongoing_pattern | Activity pattern analysis (institutional-level volume) |
+| `high-activity-moderate` | passive, kyc | ongoing_pattern | Moderate activity visible to any observer |
 | `address-entity-identified` | kyc, state | active_risk | Live entity association |
 
 ### Chain Analysis
@@ -182,7 +184,13 @@ Dynamic finding IDs (e.g., `h7-op-return-0`, `h7-op-return-1`) fall back to pref
 | `chain-post-cj-partial-spend` | passive, kyc | historical | Post-CoinJoin partial spend |
 | `chain-post-mix-consolidation` | passive, kyc, state | historical | Post-mix consolidation |
 | `chain-kyc-consolidation-before-cj` | passive | historical | Positive pattern |
-| `peel-chain-trace`, `peel-chain-trace-short` | passive, kyc, state | historical | Multi-hop peel chain |
+| `chain-trace-summary` | passive | historical | Trace overview (informational) |
+| `chain-trace-partial` | passive | historical | Incomplete trace (data quality) |
+| `chain-post-coinjoin-direct-spend` | passive, kyc, state | historical | Post-CoinJoin output spent directly to entity |
+| `no-consolidation`, `no-mix-origins`, `fresh-addresses`, `time-elapsed`, `small-change` | passive | historical | CoinJoin quality sub-findings (positive indicators) |
+| `utxo-age-spread` | passive, kyc | historical | Co-spent UTXOs with large age spread |
+| `peel-chain-trace` | passive, kyc, state | historical | Multi-hop peel chain (full trace requires state resources) |
+| `peel-chain-trace-short` | passive, kyc | historical | Short peel chain trace |
 | `linkability-deterministic`, `linkability-ambiguous`, `linkability-equal-subset` | passive | historical | Linkability analysis |
 | `joinmarket-subset-sum`, `joinmarket-subset-sum-resistant` | passive, state | historical | Subset-sum analysis |
 | `joinmarket-taker-maker`, `joinmarket-anon-set` | passive, state | historical | JoinMarket role identification |
@@ -204,6 +212,7 @@ Dynamic finding IDs (e.g., `h7-op-return-0`, `h7-op-return-1`) fall back to pref
 | `compound-deterministic-cap` | passive, kyc, state | historical | Score cap trigger |
 | `api-incomplete-prevout` | passive | historical | Data quality |
 | `partial-history-unavailable`, `partial-history-partial` | passive | historical | Data quality |
+| `behavioral-fingerprint-rollup` | passive | ongoing_pattern | Compound behavioral fingerprint (2+ sub-signals) |
 
 ## UI Rendering
 
