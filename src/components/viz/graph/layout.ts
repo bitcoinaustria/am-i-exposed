@@ -135,9 +135,17 @@ export function layoutGraph(
     colWidths.set(depth, hasExpanded ? EXPANDED_NODE_W : NODE_W);
   }
 
-  // Calculate cumulative x positions
+  // Calculate cumulative x positions.
+  // Reserve space to the left of depth 0 so backward expansions don't shift
+  // existing nodes. We pre-offset by the number of negative-depth columns
+  // that COULD exist (budget: 20 backward hops max).
+  const maxBackwardBudget = 20;
+  const negativeDepths = depths.filter((d) => d < 0).length;
+  const reservedBackward = Math.max(0, maxBackwardBudget - negativeDepths);
+  const backwardPadding = reservedBackward * (NODE_W + COL_GAP);
+
   const colX = new Map<number, number>();
-  let cumX = MARGIN.left;
+  let cumX = MARGIN.left + backwardPadding;
   for (const depth of depths) {
     colX.set(depth, cumX);
     cumX += colWidths.get(depth)! + COL_GAP;
