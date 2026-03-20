@@ -175,11 +175,22 @@ export async function runTxidAnalysis(
     forwardLayers: forwardLayers.length > 0 ? forwardLayers : null,
   }));
 
+  // Build parentTxs Map from backward trace layer 0 (direct parents)
+  // for heuristics that need confirmation heights of input funding txs
+  let parentTxs: Map<string, MempoolTransaction> | undefined;
+  if (backwardLayers.length > 0 && backwardLayers[0].txs.size > 0) {
+    parentTxs = backwardLayers[0].txs;
+  } else if (parentTx) {
+    // Fallback: only the single pre-fetched parent for vin[0]
+    parentTxs = new Map([[tx.vin[0].txid, parentTx]]);
+  }
+
   const ctx: TxContext = {
     ...(usdPrice ? { usdPrice } : {}),
     ...(eurPrice ? { eurPrice } : {}),
     isCustomApi,
     ...(parentTx ? { parentTx } : {}),
+    ...(parentTxs ? { parentTxs } : {}),
     ...(childTx ? { childTx } : {}),
     ...(outputTxCounts ? { outputTxCounts } : {}),
   };

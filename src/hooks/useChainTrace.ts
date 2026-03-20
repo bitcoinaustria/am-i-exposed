@@ -11,6 +11,7 @@ import type { AnalysisSettings } from "@/hooks/useAnalysisSettings";
 import type { FetchProgress, AnalysisState } from "@/hooks/useAnalysisState";
 import type { MempoolTransaction, MempoolOutspend } from "@/lib/api/types";
 import { sumImpact } from "@/lib/scoring/score";
+import { enrichFindingsWithMetadata } from "@/lib/analysis/finding-metadata";
 import type { ScoringResult, Finding } from "@/lib/types";
 
 /** Parameters for the chain analysis phase. */
@@ -383,4 +384,7 @@ export async function runChainAnalysis(params: ChainAnalysisParams): Promise<voi
       },
     } satisfies Finding);
   }
+
+  // Enrich chain findings with adversary tier and temporality metadata
+  enrichFindingsWithMetadata(result.findings);
 }

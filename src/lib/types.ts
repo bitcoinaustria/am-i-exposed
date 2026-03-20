@@ -14,6 +14,10 @@ export interface Remediation {
 
 export type ConfidenceLevel = "deterministic" | "high" | "medium" | "low";
 
+export type AdversaryTier = "passive_observer" | "kyc_exchange" | "state_adversary";
+
+export type TemporalityClass = "historical" | "ongoing_pattern" | "active_risk";
+
 export interface Finding {
   id: string;
   severity: Severity;
@@ -26,6 +30,10 @@ export interface Finding {
   remediation?: Remediation;
   /** How certain is this finding? Deterministic = 100%, heuristic = probabilistic. */
   confidence?: ConfidenceLevel;
+  /** Who can exploit this finding? Ordered lowest to highest adversary tier. */
+  adversaryTiers?: AdversaryTier[];
+  /** Is the damage fixable? Historical = done, ongoing = changeable, active = act now. */
+  temporality?: TemporalityClass;
 }
 
 export type TxType =
