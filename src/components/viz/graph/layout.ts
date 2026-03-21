@@ -111,6 +111,8 @@ export function layoutGraph(
   expandedNodeTxid?: string | null,
   /** Reserve left padding so backward expansions don't shift nodes (fullscreen pan/zoom mode). */
   reserveBackwardSpace?: boolean,
+  /** User-defined position overrides (from node dragging). */
+  positionOverrides?: Map<string, { x: number; y: number }>,
 ): { layoutNodes: LayoutNode[]; edges: LayoutEdge[]; width: number; height: number; nodePositions: Map<string, { x: number; y: number; w: number; h: number }> } {
   const layoutNodes: LayoutNode[] = [];
   const edges: LayoutEdge[] = [];
@@ -207,6 +209,19 @@ export function layoutGraph(
 
       yOffset += nodeH + ROW_GAP;
     });
+  }
+
+  // Apply user-defined position overrides (node dragging)
+  if (positionOverrides) {
+    for (const [txid, pos] of positionOverrides) {
+      const existing = nodePositions.get(txid);
+      if (!existing) continue;
+      existing.x = pos.x;
+      existing.y = pos.y;
+      // Also update the layoutNode
+      const ln = layoutNodes.find((n) => n.txid === txid);
+      if (ln) { ln.x = pos.x; ln.y = pos.y; }
+    }
   }
 
   // Build edges from parent/child relationships

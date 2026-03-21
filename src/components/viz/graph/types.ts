@@ -4,7 +4,7 @@ import type { Finding, ScoringResult } from "@/lib/types";
 import type { EntityCategory } from "@/lib/analysis/entities";
 import type { BoltzmannWorkerResult } from "@/lib/analysis/boltzmann-pool";
 import type { BitcoinNetwork } from "@/lib/bitcoin/networks";
-import type { SavedGraph } from "@/lib/graph/saved-graph-types";
+import type { SavedGraph, GraphAnnotation } from "@/lib/graph/saved-graph-types";
 import type { useChartTooltip } from "../shared/ChartTooltip";
 
 // Re-export for convenience
@@ -64,6 +64,28 @@ export interface GraphExplorerProps {
   currentGraphId?: string | null;
   currentLabel?: string | null;
   onLoadSavedGraph?: (graph: SavedGraph) => void;
+  /** User-defined node position overrides from dragging. */
+  nodePositionOverrides?: Map<string, { x: number; y: number }>;
+  /** Callback when user drags a node to a new position. */
+  onNodePositionChange?: (txid: string, x: number, y: number) => void;
+  /** Annotations on the graph canvas. */
+  annotations?: GraphAnnotation[];
+  /** Whether annotate mode is active. */
+  annotateMode?: boolean;
+  /** Callback when annotations change. */
+  onAnnotationsChange?: (annotations: GraphAnnotation[]) => void;
+  /** Toggle annotate mode. */
+  onToggleAnnotateMode?: () => void;
+  /** User labels on nodes, keyed by txid. */
+  nodeLabels?: Map<string, string>;
+  /** Set a label on a node (empty string removes it). */
+  onSetNodeLabel?: (txid: string, label: string) => void;
+  /** User labels on edges, keyed by "fromTxid->toTxid". */
+  edgeLabels?: Map<string, string>;
+  /** Set a label on an edge (empty string removes it). */
+  onSetEdgeLabel?: (key: string, label: string) => void;
+  /** Last loaded SavedGraph - used to restore annotations/positions/labels. */
+  lastLoadedGraph?: SavedGraph | null;
 }
 
 export interface LayoutNode {

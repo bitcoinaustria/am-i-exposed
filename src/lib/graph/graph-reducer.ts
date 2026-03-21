@@ -73,7 +73,7 @@ export interface GraphExpansionFetcher {
 
 // ─── Constants ─────────────────────────────────────────────────────────
 
-export const DEFAULT_MAX_NODES = 100;
+export const DEFAULT_MAX_NODES = 200;
 
 // ─── Helpers ───────────────────────────────────────────────────────────
 

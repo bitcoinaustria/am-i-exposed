@@ -19,6 +19,7 @@ import { computeDeterministicChains, buildDetChainEdgeSet } from "./deterministi
 import { detectToxicMerges, buildToxicMergeSet } from "./toxicChange";
 import { computeEntropyPropagation } from "./privacyGradient";
 import { usePanZoom } from "./usePanZoom";
+import { GraphAnnotations } from "./GraphAnnotations";
 import { computeFocusSpotlight } from "./focusSpotlight";
 import type { GraphCanvasProps, LayoutNode } from "./types";
 
@@ -61,6 +62,15 @@ export function GraphCanvas({
   outspendCache,
   onLayoutComplete,
   boltzmannCache,
+  nodePositionOverrides,
+  onNodePositionChange,
+  annotations,
+  annotateMode,
+  onAnnotationsChange,
+  nodeLabels,
+  onSetNodeLabel,
+  edgeLabels,
+  onSetEdgeLabel,
 }: GraphCanvasProps) {
   // Subscribe to theme changes so SVG_COLORS proxy resolves fresh values on re-render
   useTheme();
@@ -74,6 +84,93 @@ export function GraphCanvas({
     window.addEventListener("touchstart", onTouch, { once: true, passive: true });
     return () => window.removeEventListener("touchstart", onTouch);
   }, []);
+
+  // ─── Node dragging ──────────────────────────────────────────────
+  const nodeDragRef = useRef<{
+    txid: string;
+    startMouseX: number;
+    startMouseY: number;
+    startNodeX: number;
+    startNodeY: number;
+    isDragging: boolean;
+  } | null>(null);
+  const [draggingTxid, setDraggingTxid] = useState<string | null>(null);
+  const justDraggedRef = useRef(false);
+
+  const handleNodeMouseDown = useCallback((e: React.MouseEvent, node: LayoutNode) => {
+    if (!onNodePositionChange || !viewTransform || annotateMode) return;
+    if (e.button !== 0) return; // left click only
+    e.stopPropagation();
+    nodeDragRef.current = {
+      txid: node.txid,
+      startMouseX: e.clientX,
+      startMouseY: e.clientY,
+      startNodeX: node.x,
+      startNodeY: node.y,
+      isDragging: false,
+    };
+  }, [onNodePositionChange, viewTransform, annotateMode]);
+
+  useEffect(() => {
+    if (!onNodePositionChange || !viewTransform) return;
+    const scale = viewTransform.scale;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      const drag = nodeDragRef.current;
+      if (!drag) return;
+      const dx = e.clientX - drag.startMouseX;
+      const dy = e.clientY - drag.startMouseY;
+      if (!drag.isDragging && Math.sqrt(dx * dx + dy * dy) < 5) return;
+      drag.isDragging = true;
+      setDraggingTxid(drag.txid);
+      const newX = drag.startNodeX + dx / scale;
+      const newY = drag.startNodeY + dy / scale;
+      onNodePositionChange(drag.txid, newX, newY);
+    };
+
+    const handleMouseUp = () => {
+      const drag = nodeDragRef.current;
+      if (!drag) return;
+      if (drag.isDragging) {
+        // Suppress the click that fires right after mouseup
+        justDraggedRef.current = true;
+        requestAnimationFrame(() => { justDraggedRef.current = false; });
+      }
+      nodeDragRef.current = null;
+      setDraggingTxid(null);
+    };
+
+    window.addEventListener("mousemove", handleMouseMove);
+    window.addEventListener("mouseup", handleMouseUp);
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mouseup", handleMouseUp);
+    };
+  }, [onNodePositionChange, viewTransform]);
+
+  // ─── Inline label editing (node/edge annotations) ──────────
+  const [editingLabel, setEditingLabel] = useState<{ type: "node"; txid: string } | { type: "edge"; key: string } | null>(null);
+  const [editLabelText, setEditLabelText] = useState("");
+
+  const startEditNodeLabel = useCallback((txid: string) => {
+    setEditingLabel({ type: "node", txid });
+    setEditLabelText(nodeLabels?.get(txid) ?? "");
+  }, [nodeLabels]);
+
+  const startEditEdgeLabel = useCallback((key: string) => {
+    setEditingLabel({ type: "edge", key });
+    setEditLabelText(edgeLabels?.get(key) ?? "");
+  }, [edgeLabels]);
+
+  const commitLabel = useCallback(() => {
+    if (!editingLabel) return;
+    if (editingLabel.type === "node") {
+      onSetNodeLabel?.(editingLabel.txid, editLabelText.trim());
+    } else {
+      onSetEdgeLabel?.(editingLabel.key, editLabelText.trim());
+    }
+    setEditingLabel(null);
+  }, [editingLabel, editLabelText, onSetNodeLabel, onSetEdgeLabel]);
 
   // Pan/zoom/pinch interaction (fullscreen transform mode)
   const handlePanStartDismiss = useCallback(() => {
@@ -103,8 +200,8 @@ export function GraphCanvas({
   }, [viewTransform, scrollRef]);
   const isFs = !!viewTransform; // fullscreen / pan-zoom mode
   const { layoutNodes, edges, width, height, nodePositions } = useMemo(
-    () => layoutGraph(nodes, rootTxid, filter, rootTxids, expandedNodeTxid, isFs),
-    [nodes, rootTxid, filter, rootTxids, expandedNodeTxid, isFs],
+    () => layoutGraph(nodes, rootTxid, filter, rootTxids, expandedNodeTxid, isFs, nodePositionOverrides),
+    [nodes, rootTxid, filter, rootTxids, expandedNodeTxid, isFs, nodePositionOverrides],
   );
 
   // Report visible count to parent (eliminates redundant layout call)
@@ -402,6 +499,11 @@ export function GraphCanvas({
 
   // Handle node click - toggle expansion (UTXO ports) or floating analysis panel
   const handleNodeClick = useCallback((node: LayoutNode, currentSelected: string | null) => {
+    // In annotate mode, clicking a node opens its label editor
+    if (annotateMode && onSetNodeLabel) {
+      startEditNodeLabel(node.txid);
+      return;
+    }
     // If expansion is available, toggle the expanded UTXO port view
     if (onToggleExpand) {
       onToggleExpand(node.txid);
@@ -418,7 +520,7 @@ export function GraphCanvas({
       x: pos.x,
       y: pos.y,
     });
-  }, [setSelectedNode, toScreen, onToggleExpand]);
+  }, [setSelectedNode, toScreen, onToggleExpand, annotateMode, onSetNodeLabel, startEditNodeLabel]);
 
   // Minimap scroll handler
   const [scrollPos, setScrollPos] = useState({ left: 0, top: 0 });
@@ -533,7 +635,7 @@ export function GraphCanvas({
             height={containerHeight ?? svgHeight}
             fill="black"
             fillOpacity={0}
-            pointerEvents="all"
+            pointerEvents={annotateMode ? "none" : "all"}
             onMouseDown={handlePanStart}
           />
         )}
@@ -573,6 +675,29 @@ export function GraphCanvas({
           tooltip={tooltip}
           toScreen={toScreen}
         />
+
+        {/* Annotations layer (between edges and nodes) */}
+        {annotations && annotations.length > 0 && (
+          <GraphAnnotations
+            annotations={annotations}
+            annotateMode={!!annotateMode}
+            viewTransform={viewTransform}
+            onAdd={(a) => onAnnotationsChange?.([...(annotations ?? []), a])}
+            onUpdate={(id, patch) => onAnnotationsChange?.(annotations.map((a) => a.id === id ? { ...a, ...patch } : a))}
+            onDelete={(id) => onAnnotationsChange?.(annotations.filter((a) => a.id !== id))}
+          />
+        )}
+        {/* Annotate mode overlay for creating new annotations on empty canvas */}
+        {annotateMode && (!annotations || annotations.length === 0) && (
+          <GraphAnnotations
+            annotations={[]}
+            annotateMode
+            viewTransform={viewTransform}
+            onAdd={(a) => onAnnotationsChange?.([a])}
+            onUpdate={() => {}}
+            onDelete={() => {}}
+          />
+        )}
 
         {/* Nodes */}
         {layoutNodes.map((node) => {
@@ -905,8 +1030,9 @@ export function GraphCanvas({
                 height={node.height}
                 rx={8}
                 fill="transparent"
-                style={{ cursor: "pointer" }}
-                onClick={() => handleNodeClick(node, selectedNode?.txid ?? null)}
+                style={{ cursor: draggingTxid === node.txid ? "grabbing" : onNodePositionChange && viewTransform ? "grab" : "pointer" }}
+                onMouseDown={(e) => handleNodeMouseDown(e, node)}
+                onClick={() => { if (!justDraggedRef.current) handleNodeClick(node, selectedNode?.txid ?? null); }}
                 onDoubleClick={(e) => { e.stopPropagation(); handleNodeDoubleClick(node); }}
               />
 
@@ -963,9 +1089,125 @@ export function GraphCanvas({
                   <Text x={node.x + node.width - 8} y={node.y + node.height - 2} fontSize={12} fontWeight={700} textAnchor="middle" fill={SVG_COLORS.muted}>x</Text>
                 </g>
               )}
+
+              {/* User label (inline annotation on node) */}
+              {(() => {
+                const label = nodeLabels?.get(node.txid);
+                const isEditingThis = editingLabel?.type === "node" && editingLabel.txid === node.txid;
+                if (!label && !isEditingThis) return null;
+                const labelY = node.y + node.height + 4;
+                return (
+                  <g style={{ pointerEvents: "all", cursor: annotateMode ? "pointer" : "default" }}
+                    onClick={annotateMode && !isEditingThis ? (e) => { e.stopPropagation(); startEditNodeLabel(node.txid); } : undefined}
+                  >
+                    <rect
+                      x={node.x}
+                      y={labelY}
+                      width={node.width}
+                      height={20}
+                      rx={4}
+                      fill="rgba(245, 158, 11, 0.12)"
+                      stroke="#f59e0b"
+                      strokeWidth={0.5}
+                      strokeOpacity={0.4}
+                    />
+                    {isEditingThis ? (
+                      <foreignObject x={node.x + 4} y={labelY + 1} width={node.width - 8} height={18}>
+                        <input
+                          autoFocus
+                          type="text"
+                          value={editLabelText}
+                          onChange={(e) => setEditLabelText(e.target.value.slice(0, 20))}
+                          onBlur={commitLabel}
+                          onKeyDown={(e) => { if (e.key === "Enter" || e.key === "Escape") commitLabel(); }}
+                          onMouseDown={(e) => e.stopPropagation()}
+                          placeholder="Clear to delete"
+                          style={{
+                            width: "100%", height: "100%", background: "transparent", color: "#f59e0b",
+                            border: "none", outline: "none", fontSize: "10px", fontFamily: "inherit",
+                            padding: "0 2px",
+                          }}
+                        />
+                      </foreignObject>
+                    ) : (
+                      <Text
+                        x={node.x + node.width / 2}
+                        y={labelY + 14}
+                        fontSize={10}
+                        fill="#f59e0b"
+                        textAnchor="middle"
+                        fontWeight={500}
+                        style={{ pointerEvents: "none" }}
+                      >
+                        {label}
+                      </Text>
+                    )}
+                    {/* Delete button in annotate mode */}
+                    {annotateMode && !isEditingThis && (
+                      <g style={{ cursor: "pointer" }} onClick={(e) => { e.stopPropagation(); onSetNodeLabel?.(node.txid, ""); }}>
+                        <circle cx={node.x + node.width - 4} cy={labelY - 2} r={6} fill="#ef4444" />
+                        <Text x={node.x + node.width - 4} y={labelY + 1} fontSize={8} fontWeight={700} textAnchor="middle" fill="white" style={{ pointerEvents: "none" }}>x</Text>
+                      </g>
+                    )}
+                  </g>
+                );
+              })()}
             </motion.g>
           );
         })}
+        {/* Edge labels (rendered on top of nodes for clickability) */}
+        {edges.map((edge) => {
+          const key = `${edge.fromTxid}->${edge.toTxid}`;
+          const label = edgeLabels?.get(key);
+          const isEditingThis = editingLabel?.type === "edge" && editingLabel.key === key;
+          const midX = (edge.x1 + edge.x2) / 2;
+          const midY = (edge.y1 + edge.y2) / 2;
+
+          if (annotateMode && !label && !isEditingThis) {
+            return (
+              <g key={`elbl-${key}`} style={{ cursor: "pointer", pointerEvents: "all" }}
+                onClick={(e) => { e.stopPropagation(); startEditEdgeLabel(key); }}
+              >
+                <circle cx={midX} cy={midY} r={12} fill="rgba(245, 158, 11, 0.15)" stroke="#f59e0b" strokeWidth={1} strokeDasharray="3 2" />
+                <Text x={midX} y={midY + 4} fontSize={12} fontWeight={700} textAnchor="middle" fill="#f59e0b" fillOpacity={0.6}>+</Text>
+              </g>
+            );
+          }
+
+          if (!label && !isEditingThis) return null;
+
+          return (
+            <g key={`elbl-${key}`} style={{ pointerEvents: "all", cursor: annotateMode ? "pointer" : "default" }}
+              onClick={annotateMode ? (e) => { e.stopPropagation(); startEditEdgeLabel(key); } : undefined}
+            >
+              <rect x={midX - 55} y={midY - 11} width={110} height={22} rx={4}
+                fill="rgba(30, 30, 30, 0.9)" stroke="#f59e0b" strokeWidth={0.5} strokeOpacity={0.4}
+              />
+              {isEditingThis ? (
+                <foreignObject x={midX - 50} y={midY - 9} width={100} height={18}>
+                  <input autoFocus type="text" value={editLabelText}
+                    onChange={(e) => setEditLabelText(e.target.value.slice(0, 20))}
+                    onBlur={commitLabel}
+                    onKeyDown={(e) => { if (e.key === "Enter" || e.key === "Escape") commitLabel(); }}
+                    onMouseDown={(e) => e.stopPropagation()}
+                    placeholder="Clear to delete"
+                    style={{ width: "100%", height: "100%", background: "transparent", color: "#f59e0b", border: "none", outline: "none", fontSize: "10px", fontFamily: "inherit", textAlign: "center", padding: "0" }}
+                  />
+                </foreignObject>
+              ) : (
+                <Text x={midX} y={midY + 4} fontSize={10} fill="#f59e0b" textAnchor="middle" fontWeight={500} style={{ pointerEvents: "none" }}>{label}</Text>
+              )}
+              {/* Delete button in annotate mode */}
+              {annotateMode && !isEditingThis && (
+                <g style={{ cursor: "pointer" }} onClick={(e) => { e.stopPropagation(); onSetEdgeLabel?.(key, ""); }}>
+                  <circle cx={midX + 50} cy={midY - 6} r={6} fill="#ef4444" />
+                  <Text x={midX + 50} y={midY - 3} fontSize={8} fontWeight={700} textAnchor="middle" fill="white" style={{ pointerEvents: "none" }}>x</Text>
+                </g>
+              )}
+            </g>
+          );
+        })}
+
         </g>
       </svg>
 

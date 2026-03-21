@@ -21,6 +21,7 @@ import { GraphToolbar } from "./graph/GraphToolbar";
 import { GraphLegend } from "./graph/GraphLegend";
 import { entropyColor } from "./graph/privacyGradient";
 import type { GraphExplorerProps, TooltipData, NodeFilter, ViewTransform } from "./graph/types";
+import type { GraphAnnotation, SavedGraph } from "@/lib/graph/saved-graph-types";
 import type { ScoringResult } from "@/lib/types";
 
 // Re-export types for consumers that import from this file
@@ -47,7 +48,55 @@ export function GraphExplorer(props: GraphExplorerProps) {
   const [selectedNode, setSelectedNode] = useState<{ txid: string; x: number; y: number } | null>(null);
   const [focusedNode, setFocusedNode] = useState<string | null>(null);
   const [filter, setFilter] = useState<NodeFilter>({ showCoinJoin: true, showEntity: true, showStandard: true });
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(
+    typeof window !== "undefined" && window.innerWidth < 640,
+  );
+
+  // Node position overrides from dragging
+  const [nodePositionOverrides, setNodePositionOverrides] = useState<Map<string, { x: number; y: number }>>(new Map());
+  const handleNodePositionChange = useCallback((txid: string, x: number, y: number) => {
+    setNodePositionOverrides((prev) => {
+      const next = new Map(prev);
+      next.set(txid, { x, y });
+      return next;
+    });
+  }, []);
+
+  // Annotations
+  const [annotations, setAnnotations] = useState<GraphAnnotation[]>([]);
+  const [annotateMode, setAnnotateMode] = useState(false);
+
+  // Restore state when a saved graph is loaded (from URL or workspace)
+  const lastLoadedRef = useRef<SavedGraph | null>(null);
+  useEffect(() => {
+    const graph = props.lastLoadedGraph;
+    if (!graph || graph === lastLoadedRef.current) return;
+    lastLoadedRef.current = graph;
+    setNodePositionOverrides(graph.nodePositions ? new Map(Object.entries(graph.nodePositions)) : new Map());
+    setAnnotations(graph.annotations ?? []);
+    setNodeLabels(graph.nodeLabels ? new Map(Object.entries(graph.nodeLabels)) : new Map());
+    setEdgeLabels(graph.edgeLabels ? new Map(Object.entries(graph.edgeLabels)) : new Map());
+  }, [props.lastLoadedGraph]);
+
+  // Inline labels on nodes and edges
+  const [nodeLabels, setNodeLabels] = useState<Map<string, string>>(new Map());
+  const [edgeLabels, setEdgeLabels] = useState<Map<string, string>>(new Map());
+  const handleSetNodeLabel = useCallback((txid: string, label: string) => {
+    setNodeLabels((prev) => {
+      const next = new Map(prev);
+      if (label) next.set(txid, label);
+      else next.delete(txid);
+      return next;
+    });
+  }, []);
+  const handleSetEdgeLabel = useCallback((key: string, label: string) => {
+    setEdgeLabels((prev) => {
+      const next = new Map(prev);
+      if (label) next.set(key, label);
+      else next.delete(key);
+      return next;
+    });
+  }, []);
 
   // View transform for fullscreen pan/zoom
   // alwaysFullscreen starts with an initial transform so pan/zoom works immediately
@@ -308,6 +357,7 @@ export function GraphExplorer(props: GraphExplorerProps) {
         case "s": tbHandlersRef.current.save?.(); break;
         case "o": tbHandlersRef.current.open?.(); break;
         case "c": tbHandlersRef.current.share?.(); break;
+        case "a": setAnnotateMode((prev) => !prev); break;
         case "f":
           if (isExpanded) collapseFullscreen();
           else handleExpandFullscreen();
@@ -355,8 +405,26 @@ export function GraphExplorer(props: GraphExplorerProps) {
     rootTxids: props.rootTxids,
     network: props.network,
     currentGraphId: props.currentGraphId ?? null,
-    onLoadSavedGraph: props.onLoadSavedGraph,
+    onLoadSavedGraph: props.onLoadSavedGraph ? (graph: SavedGraph) => {
+      // Restore annotation/label/position state from saved graph
+      if (graph.nodePositions) {
+        setNodePositionOverrides(new Map(Object.entries(graph.nodePositions)));
+      } else {
+        setNodePositionOverrides(new Map());
+      }
+      setAnnotations(graph.annotations ?? []);
+      setNodeLabels(graph.nodeLabels ? new Map(Object.entries(graph.nodeLabels)) : new Map());
+      setEdgeLabels(graph.edgeLabels ? new Map(Object.entries(graph.edgeLabels)) : new Map());
+      // Delegate graph topology loading to parent
+      props.onLoadSavedGraph!(graph);
+    } : undefined,
     onRegisterHandlers: (handlers: Record<string, () => void>) => { tbHandlersRef.current = handlers; },
+    annotateMode,
+    onToggleAnnotateMode: () => setAnnotateMode((prev) => !prev),
+    nodePositionOverrides,
+    annotations,
+    nodeLabels,
+    edgeLabels,
   };
 
   // ─── Legend (extracted to GraphLegend component) ────────
@@ -391,6 +459,15 @@ export function GraphExplorer(props: GraphExplorerProps) {
     changeOutputs,
     onLayoutComplete: handleLayoutComplete,
     boltzmannCache,
+    nodePositionOverrides,
+    onNodePositionChange: handleNodePositionChange,
+    annotations,
+    annotateMode,
+    onAnnotationsChange: setAnnotations,
+    nodeLabels,
+    onSetNodeLabel: handleSetNodeLabel,
+    edgeLabels,
+    onSetEdgeLabel: handleSetEdgeLabel,
   };
 
   const fullscreenCanvasProps = {

@@ -18,6 +18,23 @@ export interface SavedGraphNode {
   childEdge?: { toTxid: string; inputIndex: number };
 }
 
+/** An annotation placed on the graph canvas. */
+export interface GraphAnnotation {
+  id: string;
+  type: "note" | "rect" | "circle";
+  x: number;
+  y: number;
+  /** Short title (max 20 chars) - encoded in share URL. */
+  title: string;
+  /** Full body text (max 5000 chars) - workspace only, not in URL. */
+  body: string;
+  width?: number;
+  height?: number;
+  radius?: number;
+  color?: string;
+  connectedNodeTxid?: string;
+}
+
 /** A named, persisted graph snapshot. */
 export interface SavedGraph {
   id: string;
@@ -29,6 +46,14 @@ export interface SavedGraph {
   nodes: SavedGraphNode[];
   viewTransform?: { x: number; y: number; scale: number };
   changeOutputs?: string[];
+  /** User-defined node positions from dragging. */
+  nodePositions?: Record<string, { x: number; y: number }>;
+  /** Canvas annotations (notes, rectangles, circles). */
+  annotations?: GraphAnnotation[];
+  /** User labels on nodes, keyed by txid. */
+  nodeLabels?: Record<string, string>;
+  /** User labels on edges, keyed by "fromTxid->toTxid". */
+  edgeLabels?: Record<string, string>;
 }
 
 /** JSON envelope for import/export. */
@@ -49,6 +74,10 @@ export function serializeGraph(
   network: BitcoinNetwork,
   viewTransform?: { x: number; y: number; scale: number },
   changeOutputs?: Set<string>,
+  nodePositions?: Map<string, { x: number; y: number }>,
+  annotations?: GraphAnnotation[],
+  nodeLabels?: Map<string, string>,
+  edgeLabels?: Map<string, string>,
 ): SavedGraph {
   const nodes: SavedGraphNode[] = [];
   for (const [, node] of state.nodes) {
@@ -56,6 +85,13 @@ export function serializeGraph(
     if (node.parentEdge) saved.parentEdge = { ...node.parentEdge };
     if (node.childEdge) saved.childEdge = { ...node.childEdge };
     nodes.push(saved);
+  }
+
+  // Convert Map to Record for JSON serialization
+  let posRecord: Record<string, { x: number; y: number }> | undefined;
+  if (nodePositions && nodePositions.size > 0) {
+    posRecord = {};
+    for (const [txid, pos] of nodePositions) posRecord[txid] = pos;
   }
 
   return {
@@ -68,6 +104,10 @@ export function serializeGraph(
     nodes,
     viewTransform: viewTransform ? { ...viewTransform } : undefined,
     changeOutputs: changeOutputs?.size ? [...changeOutputs] : undefined,
+    nodePositions: posRecord,
+    annotations: annotations?.length ? annotations : undefined,
+    nodeLabels: nodeLabels?.size ? Object.fromEntries(nodeLabels) : undefined,
+    edgeLabels: edgeLabels?.size ? Object.fromEntries(edgeLabels) : undefined,
   };
 }
 

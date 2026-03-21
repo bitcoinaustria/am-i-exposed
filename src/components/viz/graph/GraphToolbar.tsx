@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
-import { Search, Loader2, Save, FolderOpen, Link2, Trash2, X } from "lucide-react";
+import { Search, Loader2, Save, FolderOpen, Link2, Trash2, X, Pencil } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useSavedGraphs } from "@/hooks/useSavedGraphs";
 import { serializeGraph } from "@/lib/graph/saved-graph-types";
@@ -11,7 +11,7 @@ import { HeatIcon, FingerprintIcon, GraphIcon, UndoIcon, ResetIcon } from "./ico
 import type { GraphNode } from "@/lib/graph/graph-reducer";
 import type { GraphState } from "@/lib/graph/graph-reducer";
 import type { BitcoinNetwork } from "@/lib/bitcoin/networks";
-import type { SavedGraph } from "@/lib/graph/saved-graph-types";
+import type { SavedGraph, GraphAnnotation } from "@/lib/graph/saved-graph-types";
 
 type EdgeMode = "default" | "linkability" | "entropy";
 type Panel = "save" | "load" | null;
@@ -49,6 +49,13 @@ interface GraphToolbarProps {
   onLoadSavedGraph?: (graph: SavedGraph) => void;
   /** Register keyboard shortcut handlers with parent. */
   onRegisterHandlers?: (handlers: Record<string, () => void>) => void;
+  // ─── Annotate mode ───
+  annotateMode?: boolean;
+  onToggleAnnotateMode?: () => void;
+  nodePositionOverrides?: Map<string, { x: number; y: number }>;
+  annotations?: GraphAnnotation[];
+  nodeLabels?: Map<string, string>;
+  edgeLabels?: Map<string, string>;
 }
 
 const SEP = <span className="text-muted/30 hidden sm:inline select-none">|</span>;
@@ -65,6 +72,8 @@ export function GraphToolbar(props: GraphToolbarProps) {
     onExpandFullscreen, onZoomIn, onZoomOut, onFitView,
     onSearch, searchLoading, searchError, currentTxid, currentLabel,
     nodes, rootTxid, rootTxids, network, currentGraphId, onLoadSavedGraph,
+    annotateMode: annotateModeActive, onToggleAnnotateMode,
+    nodePositionOverrides: posOverrides, annotations: savedAnnotations,
   } = props;
 
   const { t } = useTranslation();
@@ -128,7 +137,7 @@ export function GraphToolbar(props: GraphToolbarProps) {
   const handleSave = useCallback(() => {
     if (!network) return;
     const name = saveName.trim() || `Graph - ${truncateId(rootTxid ?? "")}`;
-    const saved = serializeGraph(buildGraphState(), name, network);
+    const saved = serializeGraph(buildGraphState(), name, network, undefined, undefined, posOverrides, savedAnnotations, props.nodeLabels, props.edgeLabels);
     const id = saveGraph(saved);
     if (id) {
       setToast(t("graphSaveLoad.saved", { defaultValue: "Graph saved" }));
@@ -136,7 +145,7 @@ export function GraphToolbar(props: GraphToolbarProps) {
     } else {
       setToast(t("graphSaveLoad.limitReached", { defaultValue: "Max 50 saved graphs reached" }));
     }
-  }, [saveName, rootTxid, buildGraphState, network, saveGraph, t]);
+  }, [saveName, rootTxid, buildGraphState, network, saveGraph, t, posOverrides, savedAnnotations, props.nodeLabels, props.edgeLabels]);
 
   const handleUpdate = useCallback(() => {
     if (!currentGraphId) return;
@@ -157,7 +166,7 @@ export function GraphToolbar(props: GraphToolbarProps) {
 
   const handleShare = useCallback(() => {
     if (!network) return;
-    const saved = serializeGraph(buildGraphState(), "", network);
+    const saved = serializeGraph(buildGraphState(), "", network, undefined, undefined, posOverrides, savedAnnotations, props.nodeLabels, props.edgeLabels);
     const encoded = encodeGraphToUrl(saved);
     if (!encoded) {
       setToast(t("graphSaveLoad.tooLarge", { defaultValue: "Graph too large for URL - use JSON export" }));
@@ -168,7 +177,7 @@ export function GraphToolbar(props: GraphToolbarProps) {
       () => setToast(t("graphSaveLoad.linkCopied", { defaultValue: "Link copied to clipboard" })),
       () => setToast("Failed to copy"),
     );
-  }, [buildGraphState, network, t]);
+  }, [buildGraphState, network, t, posOverrides, savedAnnotations, props.nodeLabels, props.edgeLabels]);
 
   // Expose handlers for keyboard shortcuts to parent
   useEffect(() => {
@@ -303,6 +312,26 @@ export function GraphToolbar(props: GraphToolbarProps) {
           </span>
         </span>
       </button>
+
+      {SEP}
+
+      {/* ── Annotate mode ───────────────────────────────────── */}
+      {onToggleAnnotateMode && (
+        <button
+          onClick={onToggleAnnotateMode}
+          className={`${btnBase} ${
+            annotateModeActive
+              ? "text-amber-400 border-amber-400/30 bg-amber-400/10"
+              : "text-muted hover:text-foreground border-card-border"
+          }`}
+          title="Annotate (A)"
+        >
+          <span className="flex items-center gap-1">
+            <Pencil size={12} />
+            <span className="hidden sm:inline">Annotate</span>
+          </span>
+        </button>
+      )}
 
       {SEP}
 

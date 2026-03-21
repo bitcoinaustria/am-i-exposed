@@ -57,6 +57,7 @@ export default function GraphPage() {
   const [currentGraphId, setCurrentGraphId] = useState<string | null>(null);
   const [loadProgress, setLoadProgress] = useState<{ loaded: number; total: number } | null>(null);
   const [loadWarning, setLoadWarning] = useState<string | null>(null);
+  const [lastLoadedGraph, setLastLoadedGraph] = useState<SavedGraph | null>(null);
   const loadAbortRef = useRef<AbortController | null>(null);
 
   const loadTxid = useCallback(
@@ -120,6 +121,7 @@ export default function GraphPage() {
         }
 
         loadGraph(result.nodes, result.rootTxid, result.rootTxids);
+        setLastLoadedGraph(saved);
 
         if (result.failedTxids.length > 0) {
           setLoadWarning(
@@ -233,6 +235,7 @@ export default function GraphPage() {
             network={network}
             currentGraphId={currentGraphId}
             onLoadSavedGraph={handleLoadSavedGraph}
+            lastLoadedGraph={lastLoadedGraph}
           />
         </Suspense>
       </ChartErrorBoundary>
