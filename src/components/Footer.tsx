@@ -1,11 +1,16 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { Github } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 export function Footer() {
   const { t } = useTranslation();
+  const pathname = usePathname();
+
+  // Graph page is full-screen, no footer
+  if (pathname === "/graph" || pathname === "/graph/") return null;
 
   return (
     <footer className="max-w-6xl mx-auto w-full">

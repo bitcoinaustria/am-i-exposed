@@ -15,9 +15,9 @@ function subscribe(callback: () => void) {
 
 function getSnapshot(): boolean {
   try {
-    return localStorage.getItem(STORAGE_KEY) === "1";
+    return sessionStorage.getItem(STORAGE_KEY) === "1";
   } catch {
-    return false; // localStorage unavailable (private browsing)
+    return false; // sessionStorage unavailable (private browsing)
   }
 }
 
@@ -35,7 +35,7 @@ export function PrivacyNotice() {
   );
 
   const handleDismiss = useCallback(() => {
-    localStorage.setItem(STORAGE_KEY, "1");
+    sessionStorage.setItem(STORAGE_KEY, "1");
     // Trigger re-render by dispatching storage event
     window.dispatchEvent(new StorageEvent("storage"));
   }, []);
