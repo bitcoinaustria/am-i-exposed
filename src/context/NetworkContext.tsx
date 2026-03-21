@@ -14,7 +14,7 @@ import {
 } from "@/lib/bitcoin/networks";
 import { useUrlState } from "@/hooks/useUrlState";
 import { useCustomApi } from "@/hooks/useCustomApi";
-import { useTorDetection, type TorStatus } from "@/hooks/useTorDetection";
+import { useTorDetection, canUseOnionEndpoint, type TorStatus } from "@/hooks/useTorDetection";
 import { useLocalApi, type LocalApiStatus } from "@/hooks/useLocalApi";
 
 interface NetworkContextValue {
@@ -79,8 +79,11 @@ export function NetworkProvider({ children }: { children: ReactNode }) {
         explorerUrl,
       };
     }
-    // Priority 3: Tor detected and onion URL available - use onion endpoint
-    if (torStatus === "tor" && baseConfig.mempoolOnionUrl) {
+    // Priority 3: Tor detected and onion URL available - use onion endpoint.
+    // Only use .onion if the browser supports it (Firefox/Tor Browser).
+    // Chromium-based browsers (Brave Tor) block http .onion from https pages
+    // due to mixed content, so they must use https://mempool.space via Tor circuit.
+    if (torStatus === "tor" && baseConfig.mempoolOnionUrl && canUseOnionEndpoint()) {
       return {
         ...baseConfig,
         mempoolBaseUrl: baseConfig.mempoolOnionUrl,

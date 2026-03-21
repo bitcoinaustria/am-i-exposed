@@ -26,23 +26,61 @@ let cachedStatus: TorStatus | null = null;
 let inflight: Promise<TorStatus> | null = null;
 
 /**
- * Detect Tor Browser through browser characteristics.
- * Tor Browser is Firefox-based and disables WebRTC via
- * media.peerconnection.enabled=false (constructor exists but throws).
+ * Detect Tor-capable browsers through local heuristics (no network).
+ *
+ * 1. Tor Browser (Firefox-based): WebRTC is disabled via
+ *    media.peerconnection.enabled=false - constructor exists but throws.
+ * 2. Brave Private Window with Tor: navigator.brave exists and
+ *    WebRTC is restricted in Tor mode.
  */
 function detectTorBrowserLocally(): boolean {
   if (typeof window === "undefined") return false;
-  if (!/Firefox\//i.test(navigator.userAgent)) return false;
 
-  // Tor Browser keeps RTCPeerConnection in scope but makes it throw
-  try {
-    if (typeof RTCPeerConnection === "undefined") return true;
-    const pc = new RTCPeerConnection();
-    pc.close();
-    return false; // WebRTC works - not Tor Browser
-  } catch {
-    return true; // WebRTC disabled - likely Tor Browser
+  // Tor Browser: Firefox UA + disabled WebRTC
+  if (/Firefox\//i.test(navigator.userAgent)) {
+    try {
+      if (typeof RTCPeerConnection === "undefined") return true;
+      const pc = new RTCPeerConnection();
+      pc.close();
+      return false; // WebRTC works - not Tor Browser
+    } catch {
+      return true; // WebRTC disabled - likely Tor Browser
+    }
   }
+
+  // Brave Tor Window: has navigator.brave API.
+  // We can't distinguish Tor vs regular private window locally,
+  // but if both worker check and onion probe failed to reach the
+  // network, and we're in Brave, there's a good chance it's Tor mode.
+  // Return false here - Brave Tor detection relies on the worker check.
+  return false;
+}
+
+/**
+ * Whether the browser is Brave (any mode).
+ * Brave exposes navigator.brave with an isBrave() method.
+ */
+export function isBraveBrowser(): boolean {
+  if (typeof window === "undefined") return false;
+  return "brave" in navigator;
+}
+
+/**
+ * Whether `.onion` API endpoints can be used.
+ * Chromium-based browsers (Brave) block mixed content (http .onion from https page),
+ * so even when Tor is detected, we must use https://mempool.space through the Tor circuit.
+ * Only Firefox-based Tor Browser exempts .onion from mixed content.
+ */
+export function canUseOnionEndpoint(): boolean {
+  if (typeof window === "undefined") return false;
+  // Page already on .onion - always works
+  if (window.location.hostname.endsWith(".onion")) return true;
+  // Page on HTTPS - only Firefox/Tor Browser has the mixed content exemption
+  if (window.location.protocol === "https:") {
+    return /Firefox\//i.test(navigator.userAgent);
+  }
+  // Page on HTTP - no mixed content issue
+  return true;
 }
 
 /** Ask the Cloudflare Worker if our IP is a Tor exit node */
@@ -60,12 +98,24 @@ async function checkWorker(signal: AbortSignal): Promise<TorStatus> {
 }
 
 /**
- * Probe mempool's .onion address to definitively test Tor connectivity.
+ * Probe mempool's .onion address to test Tor connectivity.
  * On clearnet browsers, .onion DNS resolution fails immediately.
- * On Tor Browser, .onion is exempt from mixed-content blocking and
- * routes through Tor, so the fetch succeeds.
+ * On Tor Browser (Firefox-based), .onion is exempt from mixed-content
+ * blocking even from HTTPS pages. On Brave Tor, this exemption does
+ * NOT exist (Chromium-based), so the probe will fail due to mixed
+ * content when the page is served over HTTPS.
  */
 async function probeOnion(signal: AbortSignal): Promise<boolean> {
+  // Skip probe if page is HTTPS and browser is Chromium-based
+  // (mixed content will block http://*.onion from https:// pages)
+  if (
+    typeof window !== "undefined" &&
+    window.location.protocol === "https:" &&
+    !window.location.hostname.endsWith(".onion") &&
+    !/Firefox\//i.test(navigator.userAgent)
+  ) {
+    return false;
+  }
   try {
     await fetch(ONION_PROBE_URL, {
       signal: abortSignalAny([signal, abortSignalTimeout(ONION_PROBE_TIMEOUT_MS)]),

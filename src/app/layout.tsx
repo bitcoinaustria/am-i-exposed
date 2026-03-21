@@ -24,7 +24,7 @@ export const metadata: Metadata = {
   metadataBase: new URL("https://am-i.exposed"),
   title: "am-i.exposed - Bitcoin Privacy Scanner",
   description:
-    "Is your Bitcoin traceable? Paste an address or txid - get a privacy score with 30 chain analysis heuristics. Free, client-side, no tracking.",
+    "Is your Bitcoin traceable? Paste an address or txid - get a privacy score with 33 chain analysis heuristics. Free, client-side, no tracking.",
   keywords: [
     "bitcoin transaction privacy",
     "check bitcoin privacy",
@@ -41,7 +41,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "am-i.exposed - Bitcoin Privacy Scanner",
     description:
-      "Is your Bitcoin traceable? Paste an address or txid - get a privacy score with 30 chain analysis heuristics. Free, client-side, no tracking.",
+      "Is your Bitcoin traceable? Paste an address or txid - get a privacy score with 33 chain analysis heuristics. Free, client-side, no tracking.",
     url: "https://am-i.exposed/",
     siteName: "am-i.exposed",
     type: "website",
@@ -51,7 +51,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "am-i.exposed - Bitcoin Privacy Scanner",
     description:
-      "Is your Bitcoin traceable? Paste an address or txid - get a privacy score with 30 chain analysis heuristics. Free, client-side, no tracking.",
+      "Is your Bitcoin traceable? Paste an address or txid - get a privacy score with 33 chain analysis heuristics. Free, client-side, no tracking.",
   },
   icons: {
     icon: [
@@ -74,7 +74,7 @@ export default function RootLayout({
       <head>
         <meta
           httpEquiv="Content-Security-Policy"
-          content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; font-src 'self'; connect-src 'self' https: http://localhost:* http://127.0.0.1:*; img-src 'self' data:; worker-src 'self'; base-uri 'self'; form-action 'self'; object-src 'none'"
+          content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; font-src 'self'; connect-src 'self' https: http://*.onion http://localhost:* http://127.0.0.1:* http://*.local:*; img-src 'self' data:; worker-src 'self'; base-uri 'self'; form-action 'self'; object-src 'none'"
         />
         <meta name="referrer" content="no-referrer" />
         <meta name="theme-color" content="#0a0a0a" id="meta-theme-color" />
@@ -112,7 +112,7 @@ export default function RootLayout({
               dateModified: "2026-03-07",
               screenshot: "https://am-i.exposed/opengraph-image",
               featureList: [
-                "30 Bitcoin privacy heuristics",
+                "33 Bitcoin privacy heuristics",
                 "Transaction and address analysis",
                 "CoinJoin detection (Whirlpool, WabiSabi, JoinMarket)",
                 "Boltzmann entropy estimation",
