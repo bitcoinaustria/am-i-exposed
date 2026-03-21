@@ -6,6 +6,7 @@ import { ArrowRight, Search } from "lucide-react";
 import type { MempoolTransaction } from "@/lib/api/types";
 import { formatSats, calcFeeRate, calcVsize, formatTimeAgo } from "@/lib/format";
 import { truncateId } from "@/lib/constants";
+import { countOutputValues } from "@/lib/analysis/heuristics/tx-utils";
 
 interface TxSummaryProps {
   tx: MempoolTransaction;
@@ -35,10 +36,7 @@ export function TxSummary({ tx, changeOutputIndex, onAddressClick, highlightAddr
     ? -1
     : (changeOutputIndex ?? detectLikelyChange(tx));
   // Calculate anonymity sets (output value -> count)
-  const valueCounts = new Map<number, number>();
-  for (const out of tx.vout) {
-    valueCounts.set(out.value, (valueCounts.get(out.value) ?? 0) + 1);
-  }
+  const valueCounts = countOutputValues(tx.vout);
 
   // Assign colors to equal-value groups
   const groupColors = new Map<number, string>();

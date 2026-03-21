@@ -1,24 +1,19 @@
 "use client";
 
-import { AlertTriangle, Terminal, Shield, Globe } from "lucide-react";
+import { AlertTriangle } from "lucide-react";
 import { PageShell } from "@/components/PageShell";
 import { CopyButton } from "@/components/ui/CopyButton";
 import { useTranslation } from "react-i18next";
-
-const CORS_SNIPPET = `# Add these lines inside your existing location /api/ { } block
-add_header 'Access-Control-Allow-Origin' '*' always;
-add_header 'Access-Control-Allow-Methods' 'GET, OPTIONS' always;
-if ($request_method = 'OPTIONS') {
-  return 204;
-}`;
-
-const CADDY_SNIPPET = `:8090 {
-  reverse_proxy localhost:3006
-  header Access-Control-Allow-Origin *
-  header Access-Control-Allow-Methods "GET, OPTIONS"
-  @options method OPTIONS
-  respond @options 204
-}`;
+import { CORS_SNIPPET, TOC_ITEMS } from "./setup-guide-data";
+import { TroubleshootingSection } from "./TroubleshootingSection";
+import {
+  UmbrelSection,
+  UmbrelManualSection,
+  Start9Section,
+  DockerSection,
+  CorsProxySection,
+  TorSection,
+} from "./PlatformSections";
 
 export default function SetupGuidePage() {
   const { t } = useTranslation();
@@ -37,22 +32,13 @@ export default function SetupGuidePage() {
 
         {/* Table of contents */}
         <nav className="flex flex-wrap gap-2 text-xs" aria-label={t("setup.tocLabel", { defaultValue: "Page sections" })}>
-          {[
-            { label: t("setup.toc_why", { defaultValue: "Why Self-Host" }), id: "why" },
-            { label: t("setup.toc_umbrel", { defaultValue: "Umbrel App" }), id: "umbrel" },
-            { label: t("setup.toc_manual", { defaultValue: "Manual Setup" }), id: "manual" },
-            { label: t("setup.toc_start9", { defaultValue: "Start9" }), id: "start9" },
-            { label: t("setup.toc_docker", { defaultValue: "Docker" }), id: "docker" },
-            { label: t("setup.toc_cors", { defaultValue: "CORS Proxy" }), id: "cors-proxy" },
-            { label: t("setup.toc_tor", { defaultValue: "Tor + .onion" }), id: "tor" },
-            { label: t("setup.toc_troubleshooting", { defaultValue: "Troubleshooting" }), id: "troubleshooting" },
-          ].map((s) => (
+          {TOC_ITEMS.map((s) => (
             <a
               key={s.id}
               href={`#${s.id}`}
               className="px-2.5 py-2.5 rounded-lg bg-surface-elevated/50 border border-card-border/50 text-muted hover:text-foreground hover:border-bitcoin/30 transition-all"
             >
-              {s.label}
+              {t(s.labelKey, { defaultValue: s.labelDefault })}
             </a>
           ))}
         </nav>
@@ -72,64 +58,7 @@ export default function SetupGuidePage() {
           </div>
         </section>
 
-        {/* Umbrel - recommended */}
-        <section id="umbrel" className="space-y-4">
-          <h2 className="text-2xl font-semibold text-foreground flex items-center gap-2">
-            <Terminal size={22} />
-            {t("setup.umbrel_title", { defaultValue: "Umbrel" })}
-          </h2>
-
-          <div className="bg-card-bg border border-bitcoin/30 rounded-xl p-6 space-y-4">
-            <div className="flex items-center gap-2">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-bitcoin bg-bitcoin/10 px-2 py-0.5 rounded">
-                {t("setup.recommended", { defaultValue: "Recommended" })}
-              </span>
-            </div>
-            <h3 className="text-lg font-semibold text-foreground">
-              {t("setup.umbrel_app_title", { defaultValue: "Install the Umbrel App" })}
-            </h3>
-            <p className="text-muted leading-relaxed">
-              {t("setup.umbrel_app_desc", { defaultValue: "The easiest way. Install am-i.exposed directly on your Umbrel and it automatically connects to your local mempool instance. No CORS headers, no SSH tunnel, no configuration needed." })}
-            </p>
-            <ol className="space-y-2 text-muted leading-relaxed">
-              <li className="flex gap-2">
-                <span className="text-bitcoin shrink-0 font-bold">1.</span>
-                <span>
-                  {t("setup.umbrel_step1", { defaultValue: "Open your Umbrel dashboard and go to the App Store" })}
-                </span>
-              </li>
-              <li className="flex gap-2">
-                <span className="text-bitcoin shrink-0 font-bold">2.</span>
-                <span>
-                  {t("setup.umbrel_step2", { defaultValue: "Click the three-dot menu (top right) and select Community App Stores" })}
-                </span>
-              </li>
-              <li className="flex gap-2">
-                <span className="text-bitcoin shrink-0 font-bold">3.</span>
-                <span>
-                  {t("setup.umbrel_step3", { defaultValue: "Paste the store URL and click Add:" })}
-                </span>
-              </li>
-            </ol>
-            <div className="relative">
-              <pre className="bg-surface-inset rounded-lg p-3 text-sm font-mono overflow-x-auto text-bitcoin">
-                https://github.com/Copexit/copexit-umbrel-app-store
-              </pre>
-              <CopyButton text="https://github.com/Copexit/copexit-umbrel-app-store" />
-            </div>
-            <ol start={4} className="space-y-2 text-muted leading-relaxed">
-              <li className="flex gap-2">
-                <span className="text-bitcoin shrink-0 font-bold">4.</span>
-                <span>
-                  {t("setup.umbrel_step4", { defaultValue: "Find am-i.exposed in the store and click Install" })}
-                </span>
-              </li>
-            </ol>
-            <p className="text-muted leading-relaxed">
-              {t("setup.umbrel_app_footer", { defaultValue: "The app detects your local mempool automatically. All API requests stay on your local network and Chainalysis lookups are routed through a built-in Tor proxy." })}
-            </p>
-          </div>
-        </section>
+        <UmbrelSection />
 
         {/* Manual setup for other platforms */}
         <section id="manual" className="space-y-4">
@@ -220,272 +149,12 @@ export default function SetupGuidePage() {
           </div>
         </section>
 
-        {/* Umbrel manual */}
-        <section id="umbrel-manual" className="space-y-4">
-          <h2 className="text-2xl font-semibold text-foreground flex items-center gap-2">
-            <Terminal size={22} />
-            {t("setup.umbrel_manual_title", { defaultValue: "Umbrel (Manual)" })}
-          </h2>
-          <div className="bg-card-bg border border-card-border rounded-xl p-6 space-y-5">
-            <p className="text-muted leading-relaxed">
-              {t("setup.umbrel_manual_desc", { defaultValue: "If you prefer using the am-i.exposed website instead of the Umbrel app, you can point it at your Umbrel's mempool instance. The mempool app listens on port 3006 via Umbrel's app_proxy container." })}
-            </p>
-
-            <div className="space-y-2">
-              <h3 className="text-lg font-semibold text-foreground">
-                {t("setup.umbrel_manual_cors_title", { defaultValue: "1. Add CORS headers" })}
-              </h3>
-              <p className="text-muted leading-relaxed">
-                {t("setup.umbrel_manual_cors_desc", { defaultValue: "SSH into your Umbrel and exec into the mempool web container:" })}
-              </p>
-              <div className="relative">
-                <pre className="bg-surface-inset rounded-lg p-3 text-xs font-mono overflow-x-auto whitespace-pre leading-relaxed">{`ssh umbrel@umbrel.local
-docker exec -it mempool_web_1 sh
-vi /etc/nginx/conf.d/nginx-mempool.conf`}</pre>
-                <CopyButton text="ssh umbrel@umbrel.local\ndocker exec -it mempool_web_1 sh\nvi /etc/nginx/conf.d/nginx-mempool.conf" />
-              </div>
-              <p className="text-muted leading-relaxed">
-                {t("setup.umbrel_manual_cors_add", { defaultValue: "Find the location /api/ { block and add the CORS headers shown above. Then reload nginx inside the container:" })}
-              </p>
-              <pre className="bg-surface-inset rounded-lg p-3 text-xs font-mono overflow-x-auto">
-                nginx -s reload
-              </pre>
-              <div className="bg-warning/10 rounded-lg p-3 text-xs text-warning leading-relaxed">
-                <strong>{t("setup.note", { defaultValue: "Note:" })}</strong> {t("setup.umbrel_manual_docker_warning", { defaultValue: "Changes inside the Docker container are lost when the container restarts (e.g., after an Umbrel update). You will need to re-apply them after updates. For a persistent solution, mount a custom nginx config." })}
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <h3 className="text-lg font-semibold text-foreground">
-                {t("setup.umbrel_manual_ssh_title", { defaultValue: "2. SSH tunnel" })}
-              </h3>
-              <p className="text-muted leading-relaxed">
-                {t("setup.umbrel_manual_ssh_desc", { defaultValue: "From your desktop, open a terminal:" })}
-              </p>
-              <div className="relative">
-                <pre className="bg-surface-inset rounded-lg p-3 text-xs font-mono overflow-x-auto">
-                  ssh -N -L 3006:localhost:3006 umbrel@umbrel.local
-                </pre>
-                <CopyButton text="ssh -N -L 3006:localhost:3006 umbrel@umbrel.local" />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <h3 className="text-lg font-semibold text-foreground">
-                {t("setup.umbrel_manual_config_title", { defaultValue: "3. Configure am-i.exposed" })}
-              </h3>
-              <p className="text-muted leading-relaxed">
-                {t("setup.umbrel_manual_config_desc", { defaultValue: "Click the gear icon in the header and enter:" })}
-              </p>
-              <pre className="bg-surface-inset rounded-lg p-3 text-sm font-mono overflow-x-auto text-bitcoin">
-                http://localhost:3006/api
-              </pre>
-              <p className="text-muted leading-relaxed">
-                {t("setup.umbrel_manual_config_apply", { defaultValue: "Click Apply. You should see a green checkmark if everything is configured correctly." })}
-              </p>
-            </div>
-          </div>
-        </section>
-
-        {/* Start9 */}
-        <section id="start9" className="space-y-4">
-          <h2 className="text-2xl font-semibold text-foreground flex items-center gap-2">
-            <Shield size={22} />
-            {t("setup.start9_title", { defaultValue: "Start9 / StartOS" })}
-          </h2>
-          <div className="bg-card-bg border border-card-border rounded-xl p-6 space-y-4">
-            <p className="text-muted leading-relaxed">
-              {t("setup.start9_desc", { defaultValue: "Start9 serves mempool over HTTPS on a .local hostname with a self-signed certificate. There is no bare port to SSH tunnel to, so the approach is different from Umbrel." })}
-            </p>
-
-            <div className="space-y-2">
-              <h3 className="text-lg font-semibold text-foreground">
-                {t("setup.start9_ca_title", { defaultValue: "1. Install the StartOS root CA" })}
-              </h3>
-              <p className="text-muted leading-relaxed">
-                {t("setup.start9_ca_desc", { defaultValue: "Your browser needs to trust the StartOS certificate authority. Download the CA from your StartOS dashboard and install it in your system/browser trust store. Without this, HTTPS requests to your .local address will fail." })}
-              </p>
-            </div>
-
-            <div className="space-y-2">
-              <h3 className="text-lg font-semibold text-foreground">
-                {t("setup.start9_cors_title", { defaultValue: "2. Add CORS headers" })}
-              </h3>
-              <p className="text-muted leading-relaxed">
-                {t("setup.start9_cors_desc", { defaultValue: "SSH into your Start9 and edit the mempool nginx config to add the CORS headers shown above. The process is similar to Umbrel - find the running mempool container and edit its nginx config." })}
-              </p>
-            </div>
-
-            <div className="space-y-2">
-              <h3 className="text-lg font-semibold text-foreground">
-                {t("setup.start9_config_title", { defaultValue: "3. Configure am-i.exposed" })}
-              </h3>
-              <p className="text-muted leading-relaxed">
-                {t("setup.start9_config_desc", { defaultValue: "Use your mempool's LAN address in the settings:" })}
-              </p>
-              <pre className="bg-surface-inset rounded-lg p-3 text-sm font-mono overflow-x-auto text-bitcoin">
-                {"https://<your-mempool-hostname>.local/api"}
-              </pre>
-              <p className="text-muted leading-relaxed">
-                {t("setup.start9_config_replace", { defaultValue: "Replace <your-mempool-hostname> with the hostname shown in your StartOS dashboard for the mempool service." })}
-              </p>
-            </div>
-          </div>
-        </section>
-
-        {/* Docker */}
-        <section id="docker" className="space-y-4">
-          <h2 className="text-2xl font-semibold text-foreground flex items-center gap-2">
-            <Terminal size={22} />
-            {t("setup.docker_title", { defaultValue: "Docker / Bare Metal" })}
-          </h2>
-          <div className="bg-card-bg border border-card-border rounded-xl p-6 space-y-4">
-            <p className="text-muted leading-relaxed">
-              {t("setup.docker_desc", { defaultValue: "If you run the official mempool/mempool Docker image or a bare-metal installation:" })}
-            </p>
-
-            <div className="space-y-2">
-              <h3 className="text-lg font-semibold text-foreground">{t("setup.docker_section_title", { defaultValue: "Docker" })}</h3>
-              <p className="text-muted leading-relaxed">
-                {t("setup.docker_setup_desc", { defaultValue: "The default Docker setup maps the frontend nginx to port 80 (or whichever port you configured). To persist CORS headers, mount a custom nginx config:" })}
-              </p>
-              <div className="relative">
-                <pre className="bg-surface-inset rounded-lg p-3 text-xs font-mono overflow-x-auto whitespace-pre leading-relaxed">{`# Copy the default config out of the container
-docker cp mempool_frontend_1:/etc/nginx/conf.d/nginx-mempool.conf ./nginx-mempool.conf
-
-# Edit it to add CORS headers (see Step 1 above)
-
-# Restart with the custom config mounted
-docker run -v $(pwd)/nginx-mempool.conf:/etc/nginx/conf.d/nginx-mempool.conf ...`}</pre>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <h3 className="text-lg font-semibold text-foreground">
-                {t("setup.bare_metal_title", { defaultValue: "Bare metal" })}
-              </h3>
-              <p className="text-muted leading-relaxed">
-                {t("setup.bare_metal_desc", { defaultValue: "Edit your mempool nginx config directly. The default location is typically /etc/nginx/conf.d/nginx-mempool.conf or wherever you placed it during installation." })}
-              </p>
-            </div>
-
-            <div className="space-y-2">
-              <h3 className="text-lg font-semibold text-foreground">
-                {t("setup.remote_access_title", { defaultValue: "Remote access" })}
-              </h3>
-              <p className="text-muted leading-relaxed">
-                {t("setup.remote_access_desc", { defaultValue: "If your node is on the same machine, use http://localhost:<port>/api directly. If it is on another machine on your network, use an SSH tunnel as described above." })}
-              </p>
-            </div>
-          </div>
-        </section>
-
-        {/* Local CORS proxy alternative */}
-        <section id="cors-proxy" className="space-y-4">
-          <h2 className="text-2xl font-semibold text-foreground">
-            {t("setup.cors_proxy_title", { defaultValue: "Alternative: Local CORS Proxy" })}
-          </h2>
-          <div className="bg-card-bg border border-card-border rounded-xl p-6 space-y-4">
-            <p className="text-muted leading-relaxed">
-              {t("setup.cors_proxy_desc", { defaultValue: "If you cannot or do not want to modify your node's nginx config, you can run a small reverse proxy on your desktop that adds CORS headers. This sits between your browser and the SSH tunnel." })}
-            </p>
-
-            <div className="space-y-2">
-              <h3 className="text-lg font-semibold text-foreground">
-                {t("setup.caddy_title", { defaultValue: "Using Caddy" })}
-              </h3>
-              <p className="text-muted leading-relaxed">
-                {t("setup.caddy_desc", { defaultValue: "Caddy is a single-binary web server. Create a file called Caddyfile:" })}
-              </p>
-              <div className="relative">
-                <pre className="bg-surface-inset rounded-lg p-3 text-xs font-mono overflow-x-auto whitespace-pre leading-relaxed">
-                  {CADDY_SNIPPET}
-                </pre>
-                <CopyButton text={CADDY_SNIPPET} />
-              </div>
-              <p className="text-muted leading-relaxed">
-                {t("setup.caddy_run", { defaultValue: "Then run caddy run in the same directory. In am-i.exposed settings, enter:" })}
-              </p>
-              <pre className="bg-surface-inset rounded-lg p-3 text-sm font-mono overflow-x-auto text-bitcoin">
-                http://localhost:8090/api
-              </pre>
-              <p className="text-muted text-sm leading-relaxed">
-                {t("setup.caddy_flow", { defaultValue: "The flow: browser -> Caddy (:8090, adds CORS) -> SSH tunnel (:3006) -> your node's mempool." })}
-              </p>
-            </div>
-          </div>
-        </section>
-
-        {/* Tor */}
-        <section id="tor" className="space-y-4">
-          <h2 className="text-2xl font-semibold text-foreground flex items-center gap-2">
-            <Globe size={22} />
-            {t("setup.tor_title", { defaultValue: "Alternative: Tor Browser + .onion" })}
-          </h2>
-          <div className="bg-card-bg border border-card-border rounded-xl p-6 space-y-4">
-            <p className="text-muted leading-relaxed">
-              {t("setup.tor_p1", { defaultValue: "If both am-i.exposed and your mempool instance are accessed via .onion addresses in Tor Browser, there is no mixed-content blocking (both are HTTP) and Tor Browser relaxes CORS restrictions for .onion-to-.onion requests." })}
-            </p>
-            <p className="text-muted leading-relaxed">
-              {t("setup.tor_p2", { defaultValue: "This requires a .onion mirror of am-i.exposed. If one is available, use Tor Browser to visit the .onion URL, then enter your mempool's .onion address in the settings." })}
-            </p>
-            <p className="text-muted leading-relaxed">
-              {t("setup.tor_p3", { defaultValue: "You still need CORS headers on your mempool nginx if the .onion addresses differ (which they will, since they are separate hidden services)." })}
-            </p>
-          </div>
-        </section>
-
-        {/* Troubleshooting */}
-        <section id="troubleshooting" className="space-y-4">
-          <h2 className="text-2xl font-semibold text-foreground">
-            {t("setup.troubleshooting_title", { defaultValue: "Troubleshooting" })}
-          </h2>
-          <div className="space-y-3">
-            {[
-              {
-                error: t("setup.ts_cors_error", { defaultValue: "\"Connection failed\" after setting up SSH tunnel" }),
-                cause: t("setup.ts_cors_cause", { defaultValue: "Missing CORS headers" }),
-                fix: t("setup.ts_cors_fix", { defaultValue: "This is the #1 issue. Your SSH tunnel works at the network level, but your browser blocks the response because mempool's nginx does not include CORS headers. Add the CORS headers from Step 1 and reload nginx." }),
-              },
-              {
-                error: t("setup.ts_mixed_error", { defaultValue: "\"Blocked: HTTP from HTTPS page\"" }),
-                cause: t("setup.ts_mixed_cause", { defaultValue: "Mixed content" }),
-                fix: t("setup.ts_mixed_fix", { defaultValue: "You are entering an HTTP URL that is not localhost (e.g., http://umbrel.local:3006). Use an SSH tunnel to forward the port to localhost, then use http://localhost:3006/api." }),
-              },
-              {
-                error: t("setup.ts_api_error", { defaultValue: "Health check passes but analysis returns no results" }),
-                cause: t("setup.ts_api_cause", { defaultValue: "Missing /api suffix" }),
-                fix: t("setup.ts_api_fix", { defaultValue: "Make sure your URL ends with /api. For example, http://localhost:3006/api - not http://localhost:3006. The app will warn you about this if it detects a missing suffix." }),
-              },
-              {
-                error: t("setup.ts_timeout_error", { defaultValue: "\"Timeout (10s)\"" }),
-                cause: t("setup.ts_timeout_cause", { defaultValue: "No connection" }),
-                fix: t("setup.ts_timeout_fix", { defaultValue: "Check that your SSH tunnel is still running (the terminal session must stay open). Verify the port number matches your mempool instance. Check firewall rules on your node." }),
-              },
-              {
-                error: t("setup.ts_502_error", { defaultValue: "\"HTTP 502\" or \"HTTP 503\"" }),
-                cause: t("setup.ts_502_cause", { defaultValue: "Backend not ready" }),
-                fix: t("setup.ts_502_fix", { defaultValue: "Your mempool frontend (nginx) is reachable, but the backend is not responding. This usually means the mempool backend is still syncing the blockchain. Wait for it to finish and try again." }),
-              },
-              {
-                error: t("setup.ts_restart_error", { defaultValue: "CORS changes lost after Umbrel restart" }),
-                cause: t("setup.ts_restart_cause", { defaultValue: "Docker container recreated" }),
-                fix: t("setup.ts_restart_fix", { defaultValue: "Umbrel recreates containers on updates. You need to re-apply CORS headers after each restart, or mount a persistent custom nginx config via Docker volume." }),
-              },
-            ].map((item) => (
-              <div
-                key={item.error}
-                className="bg-card-bg border border-card-border rounded-xl p-5 space-y-2 hover:border-bitcoin/20 transition-colors"
-              >
-                <h3 className="text-sm font-semibold text-foreground">{item.error}</h3>
-                <p className="text-xs text-muted">
-                  <span className="text-warning font-medium">{t("setup.cause", { defaultValue: "Cause:" })}</span> {item.cause}
-                </p>
-                <p className="text-sm text-muted leading-relaxed">{item.fix}</p>
-              </div>
-            ))}
-          </div>
-        </section>
+        <UmbrelManualSection />
+        <Start9Section />
+        <DockerSection />
+        <CorsProxySection />
+        <TorSection />
+        <TroubleshootingSection />
 
         {/* Verifying */}
         <section id="verify" className="space-y-4">

@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { useNetwork } from "@/context/NetworkContext";
 import { createApiClient } from "@/lib/api/client";
 import { ApiError } from "@/lib/api/fetch-with-retry";
+import { isBraveBrowser } from "@/hooks/useTorDetection";
 import { NETWORK_CONFIG } from "@/lib/bitcoin/networks";
 import { detectInputType } from "@/lib/analysis/detect-input";
 import {
@@ -326,8 +327,20 @@ export function useAnalysis() {
               break;
           }
         } else if (err instanceof Error) {
-          console.error("Analysis error:", err.name);
-          message = t("errors.unexpected", { defaultValue: "An unexpected error occurred." });
+          // TypeError: Failed to fetch - likely blocked by browser shields or CSP
+          if (err.name === "TypeError" && isBraveBrowser()) {
+            message = t("errors.brave_shields", {
+              defaultValue:
+                "Request blocked by Brave Shields. Click the Shields icon in the address bar and disable Shields for this site, then retry.",
+            });
+          } else if (err.name === "TypeError") {
+            message = t("errors.fetch_blocked", {
+              defaultValue:
+                "API request was blocked by the browser. If using a privacy browser, allow connections to mempool.space for this site.",
+            });
+          } else {
+            message = t("errors.unexpected", { defaultValue: "An unexpected error occurred." });
+          }
         }
         setState((prev) => ({
           ...prev,

@@ -5,10 +5,11 @@ import { motion } from "motion/react";
 import { Clock, Star, Lightbulb, X, Download, Upload } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { RecentScans } from "./RecentScans";
+import { BookmarkList } from "./history/BookmarkList";
+import { HistoryTab } from "./history/HistoryTab";
 import type { RecentScan } from "@/hooks/useRecentScans";
 import type { Bookmark } from "@/hooks/useBookmarks";
 import type { ExampleItem } from "@/lib/constants";
-import { gradeColor, truncateId } from "@/lib/constants";
 
 interface ScanHistoryProps {
   scans: RecentScan[];
@@ -99,8 +100,6 @@ export const ScanHistory = memo(function ScanHistory({
   }, [tab, availableTabs]);
 
   // Shuffle examples once on mount so Whirlpool variants don't cluster together.
-  // setTimeout defers setState out of the synchronous effect body, satisfying
-  // the react-hooks/set-state-in-effect rule while avoiding hydration mismatch.
   const [shuffledExamples, setShuffledExamples] = useState(examples);
   const [showAllExamples, setShowAllExamples] = useState(false);
   const [previewCount, setPreviewCount] = useState(4);
@@ -130,75 +129,19 @@ export const ScanHistory = memo(function ScanHistory({
       {/* Tab bar */}
       <div className="flex items-center justify-between gap-2 mb-2 px-1">
         <div ref={tabListRef} className="flex items-center gap-3" role="tablist" aria-label={t("history.tabs", { defaultValue: "Scan history tabs" })} onKeyDown={handleTabKeyDown}>
-          <button
-            id="tab-recent"
-            role="tab"
-            aria-selected={tab === "recent"}
-            aria-controls="panel-recent"
-            tabIndex={tab === "recent" ? 0 : -1}
-            onClick={() => setTab("recent")}
-            className={`inline-flex items-center gap-1.5 text-xs transition-colors cursor-pointer pb-1 ${
-              tab === "recent"
-                ? "text-foreground border-b border-foreground"
-                : "text-muted hover:text-foreground"
-            }`}
-          >
-            <Clock size={14} aria-hidden="true" />
-            {t("history.recent", { defaultValue: "Recent" })}
-            {scans.length > 0 && (
-              <span className="text-muted">({scans.length})</span>
-            )}
-          </button>
-          {(bookmarks.length > 0 || onExportBookmarks) && <button
-            id="tab-bookmarks"
-            role="tab"
-            aria-selected={tab === "bookmarks"}
-            aria-controls="panel-bookmarks"
-            tabIndex={tab === "bookmarks" ? 0 : -1}
-            onClick={() => setTab("bookmarks")}
-            className={`inline-flex items-center gap-1.5 text-xs transition-colors cursor-pointer pb-1 ${
-              tab === "bookmarks"
-                ? "text-foreground border-b border-foreground"
-                : "text-muted hover:text-foreground"
-            }`}
-          >
-            <Star size={14} aria-hidden="true" />
-            {t("history.bookmarks", { defaultValue: "Bookmarks" })}
-            {bookmarks.length > 0 && (
-              <span className="text-muted">({bookmarks.length})</span>
-            )}
-          </button>}
+          <HistoryTab id="tab-recent" label={t("history.recent", { defaultValue: "Recent" })} icon={Clock} isActive={tab === "recent"} panelId="panel-recent" count={scans.length} onClick={() => setTab("recent")} />
+          {(bookmarks.length > 0 || onExportBookmarks) && (
+            <HistoryTab id="tab-bookmarks" label={t("history.bookmarks", { defaultValue: "Bookmarks" })} icon={Star} isActive={tab === "bookmarks"} panelId="panel-bookmarks" count={bookmarks.length} onClick={() => setTab("bookmarks")} />
+          )}
           {examples.length > 0 && (
-            <button
-              id="tab-examples"
-              role="tab"
-              aria-selected={tab === "examples"}
-              aria-controls="panel-examples"
-              tabIndex={tab === "examples" ? 0 : -1}
-              onClick={() => setTab("examples")}
-              className={`inline-flex items-center gap-1.5 text-xs transition-colors cursor-pointer pb-1 ${
-                tab === "examples"
-                  ? "text-foreground border-b border-foreground"
-                  : "text-muted hover:text-foreground"
-              }`}
-            >
-              <Lightbulb size={14} aria-hidden="true" />
-              {t("history.examples", { defaultValue: "Examples" })}
-            </button>
+            <HistoryTab id="tab-examples" label={t("history.examples", { defaultValue: "Examples" })} icon={Lightbulb} isActive={tab === "examples"} panelId="panel-examples" onClick={() => setTab("examples")} />
           )}
         </div>
 
         <div className="flex items-center gap-2 shrink-0">
           {tab === "bookmarks" && onImportBookmarks && (
             <>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept=".json"
-                onChange={handleImportFile}
-                className="hidden"
-                aria-hidden="true"
-              />
+              <input ref={fileInputRef} type="file" accept=".json" onChange={handleImportFile} className="hidden" aria-hidden="true" />
               <button
                 onClick={() => fileInputRef.current?.click()}
                 className="inline-flex items-center gap-1 text-xs text-muted hover:text-foreground transition-colors cursor-pointer p-1"
@@ -264,43 +207,7 @@ export const ScanHistory = memo(function ScanHistory({
             {t("history.noBookmarks", { defaultValue: "No bookmarks yet. Save interesting scans from the results page." })}
           </p>
         ) : (
-          <div className="flex flex-wrap gap-2">
-            {bookmarks.map((bm) => (
-              <div
-                key={bm.input}
-                className="inline-flex items-center gap-2 px-3 py-2.5 rounded-lg bg-surface-elevated/50
-                  border border-card-border hover:border-card-border hover:bg-surface-elevated
-                  transition-all text-xs group"
-              >
-                <button
-                  onClick={() => onSelect(bm.input)}
-                  className="inline-flex items-center gap-2 cursor-pointer"
-                >
-                  <span className={`font-bold ${gradeColor(bm.grade)}`}>
-                    {bm.grade}
-                  </span>
-                  {bm.label ? (
-                    <span className="text-foreground truncate max-w-32">{bm.label}</span>
-                  ) : (
-                    <span className="font-mono text-muted group-hover:text-foreground transition-colors truncate max-w-32">
-                      {truncateId(bm.input)}
-                    </span>
-                  )}
-                </button>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onRemoveBookmark(bm.input);
-                  }}
-                  className="text-muted hover:text-foreground transition-colors cursor-pointer p-2 -mr-2"
-                  title={t("history.remove", { defaultValue: "Remove bookmark" })}
-                  aria-label={t("history.remove", { defaultValue: "Remove bookmark" })}
-                >
-                  <X size={12} />
-                </button>
-              </div>
-            ))}
-          </div>
+          <BookmarkList bookmarks={bookmarks} onSelect={onSelect} onRemoveBookmark={onRemoveBookmark} />
         )}
         </div>
       )}

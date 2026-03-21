@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import type { MempoolTransaction } from "@/lib/api/types";
 import { computeBoltzmann, isAutoComputable } from "@/lib/analysis/boltzmann-compute";
 import {
@@ -12,7 +12,7 @@ import { getBoltzmannEligibility, extractTxValues } from "@/lib/analysis/boltzma
 
 export type { BoltzmannWorkerResult, BoltzmannProgress };
 
-interface BoltzmannState {
+export interface BoltzmannState {
   status: "idle" | "loading" | "computing" | "complete" | "error" | "unsupported";
   result: BoltzmannWorkerResult | null;
   error: string | null;
@@ -125,18 +125,18 @@ export function useBoltzmann(
     return () => {
       requestIdRef.current = null;
     };
-  }, [tx?.txid, precomputed]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [tx?.txid, precomputed, compute]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const autoComputed = tx
-    ? (() => {
-        const { inputValues, outputValues } = extractTxValues(tx);
-        return isAutoComputable(inputValues, outputValues);
-      })()
-    : false;
+  const autoComputed = useMemo(() => {
+    if (!tx) return false;
+    const { inputValues, outputValues } = extractTxValues(tx);
+    return isAutoComputable(inputValues, outputValues);
+  }, [tx]);
 
-  const isSupported = tx
-    ? getBoltzmannEligibility(tx).canCompute
-    : false;
+  const isSupported = useMemo(() => {
+    if (!tx) return false;
+    return getBoltzmannEligibility(tx).canCompute;
+  }, [tx]);
 
   return { state, compute, cancel, autoComputed, isSupported };
 }

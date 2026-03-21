@@ -1,22 +1,19 @@
 "use client";
 
 import { motion } from "motion/react";
-import { useState, useCallback, useEffect, lazy, Suspense, memo } from "react";
+import { useCallback, lazy, Suspense, memo } from "react";
 import { useDevMode } from "@/hooks/useDevMode";
 import { useExperienceMode } from "@/hooks/useExperienceMode";
 import { useTranslation } from "react-i18next";
 import { useNetwork } from "@/context/NetworkContext";
 import { isCoinJoinFinding } from "@/lib/analysis/heuristics/coinjoin";
+import { useCjLinkabilityView } from "@/hooks/useCjLinkabilityView";
 import { AddressSummary } from "./AddressSummary";
 import { ExportButton } from "./ExportButton";
-import { TX_BASE_SCORE, ADDRESS_BASE_SCORE } from "@/lib/scoring/score";
 import { ChartErrorBoundary } from "./ui/ChartErrorBoundary";
-import { FindingsTier } from "./FindingsTier";
-import { AnalystView } from "./AnalystView";
 import { ShareButtons } from "./ShareButtons";
 import { ShareCardButton } from "./ShareCardButton";
 import { BookmarkButton } from "./BookmarkButton";
-
 
 // Lazy-load heavy chart components
 const TxFlowDiagram = lazy(() => import("./viz/TxFlowDiagram").then(m => ({ default: m.TxFlowDiagram })));
@@ -30,11 +27,9 @@ import { ScoreAlertBlock } from "./results/ScoreAlertBlock";
 import { FindingsSection } from "./results/FindingsSection";
 import { DeepAnalysisTxid } from "./results/DeepAnalysisTxid";
 import { DeepAnalysisAddress } from "./results/DeepAnalysisAddress";
-import { SidebarRecommendations } from "./results/SidebarRecommendations";
 import { PrimaryRecommendation } from "./PrimaryRecommendation";
-import { SidebarWarnings } from "./results/SidebarWarnings";
-import { ScoreWaterfallCollapsible } from "./results/ScoreWaterfallCollapsible";
 import { ResultsFooter } from "./results/ResultsFooter";
+import { ResultsSidebar } from "./results/ResultsSidebar";
 import { FindingFilterBar } from "./results/FindingFilterBar";
 import { useFindingFilters } from "@/hooks/useFindingFilters";
 
@@ -93,23 +88,7 @@ export const ResultsPanel = memo(function ResultsPanel({
   const isCoinJoin = result.findings.some(isCoinJoinFinding);
   const fingerprintFinding = result.findings.find((f) => f.id === "h11-wallet-fingerprint");
   const detectedWallet = fingerprintFinding?.params?.walletGuess as string | undefined;
-  const [cjLinkabilityView, setCjLinkabilityView] = useState(false);
-  // Reset CJ linkability view when query changes or when the tx is not a CoinJoin
-  useEffect(() => {
-    const t = setTimeout(() => setCjLinkabilityView(false), 0);
-    return () => clearTimeout(t);
-  }, [query, isCoinJoin]);
-  // Pro mode: auto-switch to linkability view when Boltzmann is computed for a CoinJoin
-  // Normie mode: always reset to normal view
-  useEffect(() => {
-    if (proMode && boltzmannResult != null && isCoinJoin) {
-      const t = setTimeout(() => setCjLinkabilityView(true), 0);
-      return () => clearTimeout(t);
-    } else if (!proMode) {
-      const t = setTimeout(() => setCjLinkabilityView(false), 0);
-      return () => clearTimeout(t);
-    }
-  }, [proMode, boltzmannResult, isCoinJoin]);
+  const [cjLinkabilityView, setCjLinkabilityView] = useCjLinkabilityView(query, isCoinJoin, proMode, boltzmannResult);
 
   const handleFindingClick = useCallback((findingId: string) => {
     const el = document.querySelector(`[data-finding-id="${findingId}"]`);
@@ -146,7 +125,7 @@ export const ResultsPanel = memo(function ResultsPanel({
       id="results-panel"
       className={`flex flex-col items-center gap-5 sm:gap-6 w-full ${proMode ? "max-w-3xl lg:max-w-5xl xl:max-w-7xl 2xl:max-w-[1800px]" : "max-w-3xl"}`}
     >
-      {/* ZONE 1: Search bar + action buttons (stacked in normie, shared row on xl+ in pro) */}
+      {/* ZONE 1: Search bar + action buttons */}
       <div className={`w-full flex flex-col ${proMode ? "xl:flex-row xl:items-center" : ""} gap-3`}>
         {onScan && <div className={`w-full ${proMode ? "xl:flex-1 xl:min-w-0" : ""}`}><InlineSearchBar onScan={onScan} initialValue={query} /></div>}
         <div className="flex items-center gap-2 flex-wrap xl:shrink-0">
@@ -157,16 +136,15 @@ export const ResultsPanel = memo(function ResultsPanel({
         </div>
       </div>
 
-      {/* === TWO-COLUMN DASHBOARD (xl+ in Pro, single-column in Simple) === */}
+      {/* === TWO-COLUMN DASHBOARD === */}
       <div className={`w-full flex flex-col ${proMode ? "xl:flex-row xl:gap-8 xl:items-start" : ""} gap-5 sm:gap-6`}>
 
-      {/* -- MAIN CONTENT COLUMN (first in DOM = left on desktop, top on mobile) -- */}
+      {/* -- MAIN CONTENT COLUMN -- */}
       <div className={`w-full ${proMode ? "xl:flex-1 xl:min-w-0" : ""} flex flex-col gap-5 sm:gap-6`}>
 
-      {/* Hero info card */}
       <HeroInfoCard query={query} inputType={inputType} result={result} txData={txData} />
 
-      {/* Score + alerts + top recommendation - inline in Simple, mobile-only in Pro (Pro desktop shows in sidebar) */}
+      {/* Score + alerts + top recommendation - inline in Simple, mobile-only in Pro */}
       <div className={`${proMode ? "xl:hidden" : ""} flex flex-col gap-5`}>
         <ScoreAlertBlock result={result} inputType={inputType} preSendResult={preSendResult} proMode={proMode} />
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.12 }}>
@@ -174,7 +152,7 @@ export const ResultsPanel = memo(function ResultsPanel({
         </motion.div>
       </div>
 
-      {/* Transaction Structure (full width) */}
+      {/* Transaction Structure */}
       {txData && (
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.16 }} className="w-full">
           <ChartErrorBoundary>
@@ -195,15 +173,12 @@ export const ResultsPanel = memo(function ResultsPanel({
         </motion.div>
       )}
 
-      {/* Finding filters (cypherpunk only) - above all finding sections */}
       {proMode && <FindingFilterBar filters={filters} />}
 
-      {/* Critical findings - immediately after the flow chart */}
       {criticalFindings.length > 0 && (
         <FindingsSection issues={criticalFindings} onTxClick={onScan} delay={0.17} proMode={proMode} />
       )}
 
-      {/* Transaction Graph (cypherpunk only, right after tx flow chart) */}
       {proMode && inputType === "txid" && txData && (
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.18 }} className="w-full">
           <ChartErrorBoundary>
@@ -214,109 +189,43 @@ export const ResultsPanel = memo(function ResultsPanel({
         </motion.div>
       )}
 
-      {/* Address summary (address only) */}
       {addressData && (
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.16 }} className="w-full">
           <AddressSummary address={addressData} findings={result?.findings} />
         </motion.div>
       )}
 
-      {/* Remaining findings (high severity + below, critical already shown above flow chart) */}
       {highFindings.length > 0 && (
         <FindingsSection issues={highFindings} onTxClick={onScan} delay={0.2} proMode={proMode} />
       )}
 
-      {/* Deep Analysis - Taint + Linkability (cypherpunk only, no GraphExplorer - moved above) */}
       {proMode && inputType === "txid" && (
-        <DeepAnalysisTxid
-          result={result}
-          txData={txData}
-          onScan={onScan}
-          backwardLayers={backwardLayers}
-          forwardLayers={forwardLayers}
-          boltzmannResult={boltzmannResult}
-        />
+        <DeepAnalysisTxid result={result} txData={txData} onScan={onScan} backwardLayers={backwardLayers} forwardLayers={forwardLayers} boltzmannResult={boltzmannResult} />
       )}
 
-      {/* Address Deep-Dive (address only) */}
       {inputType === "address" && (
-        <DeepAnalysisAddress
-          query={query}
-          addressUtxos={addressUtxos}
-          txBreakdown={txBreakdown}
-          addressTxs={addressTxs}
-          addressData={addressData}
-          onScan={onScan}
-          proMode={proMode}
-        />
+        <DeepAnalysisAddress query={query} addressUtxos={addressUtxos} txBreakdown={txBreakdown} addressTxs={addressTxs} addressData={addressData} onScan={onScan} proMode={proMode} />
       )}
 
       </div>{/* end main content column */}
 
-      {/* -- SIDEBAR (second in DOM = right on desktop in Pro, flows below in Simple) -- */}
-      <div className={`w-full ${proMode ? "xl:w-[380px] 2xl:w-[420px] xl:shrink-0" : ""} flex flex-col gap-5 sm:gap-6`}>
-
-      {/* Score + alerts - desktop sidebar only in Pro (Simple shows inline above) */}
-      {proMode && (
-        <div className="hidden xl:flex flex-col gap-5">
-          <ScoreAlertBlock result={result} inputType={inputType} preSendResult={preSendResult} proMode={proMode} />
-        </div>
-      )}
-
-      {/* Recommendations - sidebar PrimaryRecommendation only in Pro (Simple shows inline above) */}
-      {proMode && <SidebarRecommendations result={result} detectedWallet={detectedWallet ?? null} devMode={devMode} />}
-
-      {/* Additional findings, strengths, score waterfall (sidebar, Pro only) */}
-      {proMode && details.length > 0 && (
-        <FindingsTier
-          findings={details}
-          label={t("results.additionalFindings", { count: details.length, defaultValue: "Additional findings ({{count}})" })}
-          defaultOpen={true}
-          delay={0.25}
-          onTxClick={onScan}
-          proMode={proMode}
-        />
-      )}
-
-      {proMode && strengths.length > 0 && (
-        <FindingsTier
-          findings={strengths}
-          label={t("results.privacyStrengths", { count: strengths.length, defaultValue: "Privacy strengths ({{count}})" })}
-          defaultOpen={true}
-          delay={0.3}
-          onTxClick={onScan}
-          proMode={proMode}
-        />
-      )}
-
-      {proMode && result.findings.some((f) => f.scoreImpact !== 0) && (
-        <ScoreWaterfallCollapsible
-          findings={result.findings}
-          score={result.score}
-          grade={result.grade}
-          baseScore={addressData ? ADDRESS_BASE_SCORE : TX_BASE_SCORE}
-          onFindingClick={handleFindingClick}
-          delay={0.35}
-        />
-      )}
-
-      {/* Contextual Warnings (sidebar) */}
-      <SidebarWarnings
+      {/* -- SIDEBAR -- */}
+      <ResultsSidebar
         query={query}
         inputType={inputType}
-        txData={txData}
-        isCoinJoin={isCoinJoin}
         result={result}
+        txData={txData}
+        addressData={addressData}
+        preSendResult={preSendResult}
+        proMode={proMode}
+        devMode={devMode}
+        isCoinJoin={isCoinJoin}
+        detectedWallet={detectedWallet ?? null}
+        details={details}
+        strengths={strengths}
+        onScan={onScan}
+        onFindingClick={handleFindingClick}
       />
-
-      {/* Diagnostics (sidebar) */}
-      {inputType === "txid" && result.findings.length > 0 && (
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.58 }} className="w-full">
-          <AnalystView findings={result.findings} grade={result.grade} />
-        </motion.div>
-      )}
-
-      </div>{/* end sidebar */}
 
       </div>{/* end two-column wrapper */}
 

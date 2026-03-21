@@ -44,7 +44,7 @@ export function ResultsFooter({
       <p className="text-xs text-muted/70 leading-relaxed">
         {t("results.disclaimerStats", {
           findingCount: result.findings.length,
-          heuristicCount: inputType === "txid" ? "31" : "6",
+          heuristicCount: inputType === "txid" ? "27" : "6",
           defaultValue: "{{findingCount}} findings from {{heuristicCount}} heuristics",
         })}
         {txBreakdown ? t("results.disclaimerTxAnalyzed", { count: txBreakdown.length, defaultValue: " + {{count}} transactions analyzed" }) : ""}
