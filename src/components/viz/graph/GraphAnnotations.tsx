@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useCallback, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { Text } from "@visx/text";
 import type { GraphAnnotation } from "@/lib/graph/saved-graph-types";
 import type { ViewTransform } from "./types";
@@ -28,6 +29,7 @@ export function GraphAnnotations({
   onUpdate,
   onDelete,
 }: GraphAnnotationsProps) {
+  const { t } = useTranslation();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState("");
@@ -277,7 +279,7 @@ export function GraphAnnotations({
           value={editTitle}
           onChange={(e) => setEditTitle(e.target.value.slice(0, 20))}
           onKeyDown={(e) => { if (e.key === "Escape") flushEdit(); }}
-          placeholder="Title (max 20)"
+          placeholder={t("graph.annotation.titlePlaceholder", { defaultValue: "Title (max 20)" })}
           style={{
             width: "100%", background: "transparent", color,
             border: "none", borderBottom: `1px solid ${color}33`, outline: "none",
@@ -289,7 +291,7 @@ export function GraphAnnotations({
           onChange={(e) => setEditBody(e.target.value.slice(0, 5000))}
           onBlur={flushEdit}
           onKeyDown={(e) => { if (e.key === "Escape") flushEdit(); }}
-          placeholder="Notes (saved to workspace)..."
+          placeholder={t("graph.annotation.bodyPlaceholder", { defaultValue: "Notes (saved to workspace)..." })}
           style={{
             flex: 1, width: "100%", background: "transparent", color,
             border: "none", outline: "none", resize: "none",
@@ -311,7 +313,7 @@ export function GraphAnnotations({
         onBlur={flushEdit}
         onMouseDown={(e) => e.stopPropagation()}
         onKeyDown={(e) => { if (e.key === "Enter" || e.key === "Escape") flushEdit(); }}
-        placeholder="Label (max 20)"
+        placeholder={t("graph.annotation.labelPlaceholder", { defaultValue: "Label (max 20)" })}
         style={{
           width: "100%", height: "18px", background: "transparent", color,
           border: "none", outline: "none",
@@ -377,7 +379,7 @@ export function GraphAnnotations({
               ) : (
                 <>
                   <Text x={a.x + NOTE_PAD} y={a.y + NOTE_PAD + 13} fontSize={11} fontWeight={600} fill="#e5e5e5" width={w - NOTE_PAD * 2}>
-                    {a.title || (annotateMode ? "Double-click to edit" : "")}
+                    {a.title || (annotateMode ? t("graph.annotation.doubleClickToEdit", { defaultValue: "Double-click to edit" }) : "")}
                   </Text>
                   {a.body && (
                     <Text x={a.x + NOTE_PAD} y={a.y + NOTE_PAD + 28} fontSize={10} fill="#e5e5e5" fillOpacity={0.6} width={w - NOTE_PAD * 2}>

@@ -3,6 +3,7 @@
 import { useMemo, useRef, useEffect, useState, useCallback } from "react";
 import { motion } from "motion/react";
 import { Text } from "@visx/text";
+import { useTranslation } from "react-i18next";
 import { useTheme } from "@/hooks/useTheme";
 import { SVG_COLORS } from "../shared/svgConstants";
 import { ChartDefs } from "../shared/ChartDefs";
@@ -74,6 +75,7 @@ export function GraphCanvas({
 }: GraphCanvasProps) {
   // Subscribe to theme changes so SVG_COLORS proxy resolves fresh values on re-render
   useTheme();
+  const { t } = useTranslation();
   const atCapacity = nodeCount >= maxNodes;
   const [hoveredEdgeKey, setHoveredEdgeKey] = useState<string | null>(null);
   const [hoveredPort, setHoveredPort] = useState<string | null>(null);
@@ -965,12 +967,12 @@ export function GraphCanvas({
                   {ricochetHopLabels.get(node.txid) ??
                    /* BIP47 notification: OP_RETURN with 80-byte payload + dust */
                    (node.tx.vout.some(o => o.scriptpubkey_type === "op_return" && o.scriptpubkey.replace(/^6a(?:4c..)?/, "").length === 160) &&
-                   node.tx.vout.some(o => o.value > 0 && o.value <= 1000) ? "BIP47 notification" :
-                   node.inputCount === 1 && node.outputCount === 1 ? "sweep" :
-                   node.inputCount === 1 && node.outputCount === 2 ? "simple send" :
-                   node.inputCount > 1 && node.outputCount === 1 ? "consolidation" :
-                   node.inputCount === 1 && node.outputCount > 3 ? "batch" :
-                   node.tx.vin[0]?.is_coinbase ? "coinbase" :
+                   node.tx.vout.some(o => o.value > 0 && o.value <= 1000) ? t("graph.bip47Notification", { defaultValue: "BIP47 notification" }) :
+                   node.inputCount === 1 && node.outputCount === 1 ? t("graph.txTypeSweep", { defaultValue: "sweep" }) :
+                   node.inputCount === 1 && node.outputCount === 2 ? t("graph.txTypeSimpleSend", { defaultValue: "simple send" }) :
+                   node.inputCount > 1 && node.outputCount === 1 ? t("graph.txTypeConsolidation", { defaultValue: "consolidation" }) :
+                   node.inputCount === 1 && node.outputCount > 3 ? t("graph.txTypeBatch", { defaultValue: "batch" }) :
+                   node.tx.vin[0]?.is_coinbase ? t("graph.coinbase", { defaultValue: "coinbase" }) :
                    "")}
                 </Text>
               )}
@@ -1016,7 +1018,7 @@ export function GraphCanvas({
                       textAnchor="middle"
                       fontWeight={600}
                     >
-                      {vouts.size === 1 ? `Wallet: ${formatSats(utxoSats)}` : `${vouts.size} outputs: ${formatSats(utxoSats)}`}
+                      {vouts.size === 1 ? t("graph.walletOutput", { sats: formatSats(utxoSats), defaultValue: "Wallet: {{sats}}" }) : t("graph.walletOutputs", { count: vouts.size, sats: formatSats(utxoSats), defaultValue: "{{count}} outputs: {{sats}}" })}
                     </Text>
                   </g>
                 );
@@ -1121,7 +1123,7 @@ export function GraphCanvas({
                           onBlur={commitLabel}
                           onKeyDown={(e) => { if (e.key === "Enter" || e.key === "Escape") commitLabel(); }}
                           onMouseDown={(e) => e.stopPropagation()}
-                          placeholder="Clear to delete"
+                          placeholder={t("graph.clearToDelete", { defaultValue: "Clear to delete" })}
                           style={{
                             width: "100%", height: "100%", background: "transparent", color: "#f59e0b",
                             border: "none", outline: "none", fontSize: "10px", fontFamily: "inherit",

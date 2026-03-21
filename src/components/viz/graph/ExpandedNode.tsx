@@ -3,6 +3,7 @@
 import { useMemo, memo } from "react";
 import { motion } from "motion/react";
 import { Text } from "@visx/text";
+import { useTranslation } from "react-i18next";
 import { SVG_COLORS } from "../shared/svgConstants";
 import { formatSats } from "@/lib/format";
 import { truncateId } from "@/lib/constants";
@@ -48,11 +49,12 @@ function PortRow({
   onClick: () => void;
   canExpand: boolean;
 }) {
+  const { t } = useTranslation();
   const portX = side === "input" ? x + 2 : x + nodeWidth - PORT_COL_W - 2;
   const portY = port.y - PORT_H / 2;
   const typeColor = getScriptTypeColor(port.scriptType);
   const isHovered = hoveredPort === portKey;
-  const addr = port.address === "coinbase" ? "coinbase" : truncateId(port.address, 4);
+  const addr = port.address === "coinbase" ? t("graph.coinbase", { defaultValue: "coinbase" }) : truncateId(port.address, 4);
   const isUnspent = side === "output" && port.spent === false;
   const isOpReturn = port.scriptType === "op_return";
 
@@ -166,6 +168,7 @@ export const ExpandedNode = memo(function ExpandedNode({
   onNodeClick,
   atCapacity,
 }: ExpandedNodeProps) {
+  const { t } = useTranslation();
   const color = getNodeColor(node, heatScore);
   const totalValue = node.tx.vout.reduce((s, o) => s + o.value, 0);
 
@@ -298,7 +301,7 @@ export const ExpandedNode = memo(function ExpandedNode({
           fillOpacity={0.6}
           textAnchor="middle"
         >
-          {`... +${overflowInputs} more`}
+          {t("graph.overflowMore", { count: overflowInputs, defaultValue: "... +{{count}} more" })}
         </Text>
       )}
       {overflowOutputs > 0 && (
@@ -310,7 +313,7 @@ export const ExpandedNode = memo(function ExpandedNode({
           fillOpacity={0.6}
           textAnchor="middle"
         >
-          {`... +${overflowOutputs} more`}
+          {t("graph.overflowMore", { count: overflowOutputs, defaultValue: "... +{{count}} more" })}
         </Text>
       )}
 

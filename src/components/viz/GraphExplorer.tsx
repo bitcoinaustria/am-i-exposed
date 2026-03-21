@@ -486,7 +486,7 @@ export function GraphExplorer(props: GraphExplorerProps) {
         <button
           onClick={() => setSidebarCollapsed(false)}
           className="absolute right-0 top-2 z-10 w-5 h-8 bg-card-bg/90 border border-card-border border-r-0 rounded-l transition-colors cursor-pointer flex items-center justify-center hover:bg-surface-inset"
-          title="Show sidebar"
+          title={t("graph.showSidebar", { defaultValue: "Show sidebar" })}
         >
           <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><polyline points="15 18 9 12 15 6" /></svg>
         </button>
@@ -530,14 +530,14 @@ export function GraphExplorer(props: GraphExplorerProps) {
           {tooltip.tooltipData.linkProb !== undefined && (
             <div className="flex items-center gap-1.5">
               <span style={{ width: 8, height: 8, borderRadius: "50%", backgroundColor: probColor(tooltip.tooltipData.linkProb), display: "inline-block", flexShrink: 0 }} />
-              <span className="text-xs font-medium" style={{ color: SVG_COLORS.foreground }}>{Math.round(tooltip.tooltipData.linkProb * 100)}% linkability</span>
+              <span className="text-xs font-medium" style={{ color: SVG_COLORS.foreground }}>{Math.round(tooltip.tooltipData.linkProb * 100)}{t("graph.linkabilityPercent", { defaultValue: "% linkability" })}</span>
             </div>
           )}
           {tooltip.tooltipData.entropyNormalized !== undefined && (
             <div className="flex items-center gap-1.5">
               <span style={{ width: 8, height: 8, borderRadius: "50%", backgroundColor: entropyColor(tooltip.tooltipData.entropyNormalized), display: "inline-block", flexShrink: 0 }} />
               <span className="text-xs font-medium" style={{ color: SVG_COLORS.foreground }}>
-                {(tooltip.tooltipData.entropyBits ?? 0).toFixed(2)} bits effective entropy
+                {(tooltip.tooltipData.entropyBits ?? 0).toFixed(2)} {t("graph.effectiveEntropy", { defaultValue: "bits effective entropy" })}
               </span>
             </div>
           )}
@@ -558,7 +558,7 @@ export function GraphExplorer(props: GraphExplorerProps) {
         ) : null}
         <span className="text-xs" style={{ color: SVG_COLORS.muted }}>{tooltip.tooltipData.feeRate} sat/vB</span>
         {!tooltip.tooltipData.confirmed && (
-          <span className="text-xs font-medium" style={{ color: SVG_COLORS.medium }}>Unconfirmed</span>
+          <span className="text-xs font-medium" style={{ color: SVG_COLORS.medium }}>{t("graph.unconfirmed", { defaultValue: "Unconfirmed" })}</span>
         )}
         {(() => {
           const heatEntry = heatMapActive ? heatMap.get(tooltip.tooltipData.txid) : undefined;

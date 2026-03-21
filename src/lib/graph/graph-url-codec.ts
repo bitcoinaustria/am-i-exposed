@@ -138,15 +138,29 @@ export function encodeGraphToUrl(saved: SavedGraph): string | null {
     }
   }
 
+  // Collect edge labels (keyed by "fromTxid->toTxid", max 20 chars)
+  const edgeLabelEntries: { fromIdx: number; toIdx: number; bytes: Uint8Array }[] = [];
+  if (saved.edgeLabels) {
+    for (const [key, label] of Object.entries(saved.edgeLabels)) {
+      const parts = key.split("->");
+      if (parts.length !== 2 || !label) continue;
+      const fromIdx = txidToIdx.get(parts[0]);
+      const toIdx = txidToIdx.get(parts[1]);
+      if (fromIdx === undefined || toIdx === undefined) continue;
+      edgeLabelEntries.push({ fromIdx, toIdx, bytes: encodeUtf8(label.slice(0, 20)) });
+    }
+  }
+
   // Calculate buffer size
   const headerSize = 5;
   const multiRootSize = 2 + multiRoots.length * 2;
   const networkSize = 1;
   const nodeTableSize = nodeCount * 37;
-  const posSize = 2 + posEntries.length * 10; // count + (idx:2 + x:4 + y:4)
+  const posSize = 2 + posEntries.length * 10;
   const nodeLabelSize = 2 + nodeLabelEntries.reduce((s, e) => s + 2 + 1 + e.bytes.length, 0);
   const annotSize = 2 + annotEntries.reduce((s, e) => s + 1 + 16 + 1 + e.titleBytes.length, 0);
-  const totalSize = headerSize + multiRootSize + networkSize + nodeTableSize + posSize + nodeLabelSize + annotSize;
+  const edgeLabelSize = 2 + edgeLabelEntries.reduce((s, e) => s + 4 + 1 + e.bytes.length, 0);
+  const totalSize = headerSize + multiRootSize + networkSize + nodeTableSize + posSize + nodeLabelSize + annotSize + edgeLabelSize;
 
   const buf = new Uint8Array(totalSize);
   const view = new DataView(buf.buffer);
@@ -221,6 +235,16 @@ export function encodeGraphToUrl(saved: SavedGraph): string | null {
     buf[offset++] = Math.min(e.titleBytes.length, MAX_TITLE_BYTES);
     buf.set(e.titleBytes.slice(0, MAX_TITLE_BYTES), offset);
     offset += Math.min(e.titleBytes.length, MAX_TITLE_BYTES);
+  }
+
+  // Edge labels (fromIdx:uint16, toIdx:uint16, len:uint8, utf8[len])
+  view.setUint16(offset, edgeLabelEntries.length); offset += 2;
+  for (const e of edgeLabelEntries) {
+    view.setUint16(offset, e.fromIdx); offset += 2;
+    view.setUint16(offset, e.toIdx); offset += 2;
+    buf[offset++] = Math.min(e.bytes.length, MAX_TITLE_BYTES);
+    buf.set(e.bytes.slice(0, MAX_TITLE_BYTES), offset);
+    offset += Math.min(e.bytes.length, MAX_TITLE_BYTES);
   }
 
   const encoded = toBase64Url(buf.slice(0, offset));
@@ -358,11 +382,31 @@ export function decodeGraphFromUrl(
       }
     }
 
+    // Edge labels
+    let edgeLabels: Record<string, string> | undefined;
+    if (version >= 2 && offset + 2 <= buf.length) {
+      const edgeLabelCount = view.getUint16(offset); offset += 2;
+      if (edgeLabelCount > 0) {
+        edgeLabels = {};
+        for (let i = 0; i < edgeLabelCount && offset + 5 <= buf.length; i++) {
+          const fromIdx = view.getUint16(offset); offset += 2;
+          const toIdx = view.getUint16(offset); offset += 2;
+          const len = buf[offset++];
+          if (offset + len <= buf.length && fromIdx < nodeCount && toIdx < nodeCount) {
+            const text = decodeUtf8(buf, offset, len);
+            offset += len;
+            edgeLabels[`${txids[fromIdx]}->${txids[toIdx]}`] = text;
+          }
+        }
+      }
+    }
+
     return {
       network, rootTxid, rootTxids, nodes,
       nodePositions,
       nodeLabels,
       annotations,
+      edgeLabels,
     };
   } catch {
     return null;

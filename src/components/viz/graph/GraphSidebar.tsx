@@ -118,7 +118,7 @@ export function GraphSidebar({
             <button
               onClick={onCollapse}
               className="text-muted hover:text-foreground transition-colors p-0.5 cursor-pointer"
-              title="Collapse sidebar"
+              title={t("graph.collapseSidebar", { defaultValue: "Collapse sidebar" })}
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><polyline points="9 18 15 12 9 6" /></svg>
             </button>
@@ -161,8 +161,8 @@ export function GraphSidebar({
       {/* Tabs */}
       <div className="flex border-b border-card-border shrink-0">
         <button className={tabClass("io")} onClick={() => setActiveTab("io")}>I/O</button>
-        <button className={tabClass("analysis")} onClick={() => setActiveTab("analysis")}>Analysis</button>
-        <button className={tabClass("technical")} onClick={() => setActiveTab("technical")}>Technical</button>
+        <button className={tabClass("analysis")} onClick={() => setActiveTab("analysis")}>{t("graph.tabAnalysis", { defaultValue: "Analysis" })}</button>
+        <button className={tabClass("technical")} onClick={() => setActiveTab("technical")}>{t("graph.tabTechnical", { defaultValue: "Technical" })}</button>
       </div>
 
       {/* Tab content */}
@@ -291,23 +291,23 @@ function AnalysisTab({ result, tx }: { result: ScoringResult; tx: MempoolTransac
 // ─── Technical Tab ───────────────────────────────────────────────
 
 function TechnicalTab({ tx, feeRate, vsize }: { tx: MempoolTransaction; feeRate: string; vsize: number }) {
+  const { t } = useTranslation();
   const hasSegwit = tx.vin.some((v) => v.witness && v.witness.length > 0);
   const hasTaproot = tx.vin.some((v) => v.prevout?.scriptpubkey_type === "v1_p2tr") ||
     tx.vout.some((v) => v.scriptpubkey_type === "v1_p2tr");
   const isRbf = tx.vin.some((v) => v.sequence < 0xfffffffe);
-
   const rows: Array<{ label: string; value: string | number; highlight?: boolean }> = [
-    { label: "Version", value: tx.version },
-    { label: "Locktime", value: tx.locktime === 0 ? "0 (none)" : tx.locktime < 500_000_000 ? `${tx.locktime} (block height)` : `${tx.locktime} (timestamp)` },
-    { label: "Size", value: `${tx.size} bytes` },
-    { label: "Weight", value: `${tx.weight} WU` },
-    { label: "Virtual size", value: `${vsize} vB` },
-    { label: "Fee", value: formatSats(tx.fee) },
-    { label: "Fee rate", value: `${feeRate} sat/vB` },
-    { label: "SegWit", value: hasSegwit ? "Yes" : "No" },
-    { label: "Taproot", value: hasTaproot ? "Yes" : "No" },
-    { label: "RBF signaling", value: isRbf ? "Yes (BIP125)" : "No", highlight: isRbf },
-    { label: "Confirmed", value: tx.status?.confirmed ? `Block ${tx.status.block_height}` : "Unconfirmed", highlight: !tx.status?.confirmed },
+    { label: t("graph.technical.version", { defaultValue: "Version" }), value: tx.version },
+    { label: t("graph.technical.locktime", { defaultValue: "Locktime" }), value: tx.locktime === 0 ? t("graph.technical.locktimeNone", { defaultValue: "0 (none)" }) : tx.locktime < 500_000_000 ? `${tx.locktime} ${t("graph.technical.locktimeBlockHeight", { defaultValue: "(block height)" })}` : `${tx.locktime} ${t("graph.technical.locktimeTimestamp", { defaultValue: "(timestamp)" })}` },
+    { label: t("graph.technical.size", { defaultValue: "Size" }), value: `${tx.size} ${t("graph.technical.bytes", { defaultValue: "bytes" })}` },
+    { label: t("graph.technical.weight", { defaultValue: "Weight" }), value: `${tx.weight} ${t("graph.technical.wu", { defaultValue: "WU" })}` },
+    { label: t("graph.technical.virtualSize", { defaultValue: "Virtual size" }), value: `${vsize} ${t("graph.technical.vb", { defaultValue: "vB" })}` },
+    { label: t("graph.technical.fee", { defaultValue: "Fee" }), value: formatSats(tx.fee) },
+    { label: t("graph.technical.feeRate", { defaultValue: "Fee rate" }), value: `${feeRate} ${t("graph.technical.satVb", { defaultValue: "sat/vB" })}` },
+    { label: t("graph.technical.segwit", { defaultValue: "SegWit" }), value: hasSegwit ? "Yes" : "No" },
+    { label: t("graph.technical.taproot", { defaultValue: "Taproot" }), value: hasTaproot ? "Yes" : "No" },
+    { label: t("graph.technical.rbfSignaling", { defaultValue: "RBF signaling" }), value: isRbf ? t("graph.technical.rbfYes", { defaultValue: "Yes (BIP125)" }) : "No", highlight: isRbf },
+    { label: t("graph.technical.confirmed", { defaultValue: "Confirmed" }), value: tx.status?.confirmed ? t("graph.technical.confirmedBlock", { height: tx.status.block_height, defaultValue: "Block {{height}}" }) : t("graph.technical.unconfirmed", { defaultValue: "Unconfirmed" }), highlight: !tx.status?.confirmed },
   ];
 
   return (

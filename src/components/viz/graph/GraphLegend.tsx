@@ -109,15 +109,15 @@ export function GraphLegend({ filter, onToggleFilter, fingerprintMode, changeOut
               <div className="grid grid-cols-2 gap-x-3 gap-y-0.5">
                 <span className="flex items-center gap-1.5">
                   <span className="inline-block w-3.5 h-2.5 shrink-0" style={{ background: "var(--card-border)", border: "1.5px solid var(--muted)", borderRadius: 4 }} />
-                  <span className="text-muted">v2, lock=0</span>
+                  <span className="text-muted">{t("graph.legend.v2Lock0", { defaultValue: "v2, lock=0" })}</span>
                 </span>
                 <span className="flex items-center gap-1.5">
                   <span className="inline-block w-3.5 h-2.5 shrink-0" style={{ background: "var(--surface-inset)", border: "1.5px solid var(--muted)", borderRadius: 4 }} />
-                  <span className="text-muted">v2, lock!=0</span>
+                  <span className="text-muted">{t("graph.legend.v2LockNonzero", { defaultValue: "v2, lock!=0" })}</span>
                 </span>
                 <span className="flex items-center gap-1.5">
                   <span className="inline-block w-3.5 h-2.5 shrink-0" style={{ background: "var(--card-border)", border: "1.5px solid var(--muted)", borderRadius: 0 }} />
-                  <span className="text-muted">v1, lock=0</span>
+                  <span className="text-muted">{t("graph.legend.v1Lock0", { defaultValue: "v1, lock=0" })}</span>
                 </span>
               </div>
             </>

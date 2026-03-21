@@ -197,11 +197,11 @@ export function GraphToolbar(props: GraphToolbarProps) {
   const [now] = useState(() => Date.now());
   const timeAgo = useCallback((ms: number): string => {
     const secs = Math.floor((now - ms) / 1000);
-    if (secs < 60) return "just now";
-    if (secs < 3600) return `${Math.floor(secs / 60)}m ago`;
-    if (secs < 86400) return `${Math.floor(secs / 3600)}h ago`;
-    return `${Math.floor(secs / 86400)}d ago`;
-  }, [now]);
+    if (secs < 60) return t("graph.timeAgoJustNow", { defaultValue: "just now" });
+    if (secs < 3600) return t("graph.timeAgoMinutesAgo", { count: Math.floor(secs / 60), defaultValue: "{{count}}m ago" });
+    if (secs < 86400) return t("graph.timeAgoHoursAgo", { count: Math.floor(secs / 3600), defaultValue: "{{count}}h ago" });
+    return t("graph.timeAgoDaysAgo", { count: Math.floor(secs / 86400), defaultValue: "{{count}}d ago" });
+  }, [now, t]);
 
   return (
     <div className="flex flex-wrap items-center gap-1.5 gap-y-2">
@@ -231,7 +231,7 @@ export function GraphToolbar(props: GraphToolbarProps) {
               />
               {searchInput.trim() && TXID_RE.test(searchInput.trim()) && (
                 <button type="submit" className="text-[10px] text-bitcoin hover:text-bitcoin-hover cursor-pointer shrink-0">
-                  Go
+                  {t("graph.searchGo", { defaultValue: "Go" })}
                 </button>
               )}
             </div>
@@ -250,7 +250,7 @@ export function GraphToolbar(props: GraphToolbarProps) {
         </span>
         {hiddenCount > 0 && (
           <span className="text-muted/70 hidden sm:inline">
-            +{hiddenCount} hidden
+            +{hiddenCount} {t("graph.hidden", { defaultValue: "hidden" })}
           </span>
         )}
       </div>
@@ -265,12 +265,12 @@ export function GraphToolbar(props: GraphToolbarProps) {
             ? "text-bitcoin border-bitcoin/30 bg-bitcoin/10"
             : "text-muted hover:text-foreground border-card-border"
         }`}
-        title="Heat Map (H)"
+        title={t("graph.heatMap", { defaultValue: "Heat Map (H)" })}
       >
         <span className="flex items-center gap-1">
           <HeatIcon />
           <span className="hidden sm:inline">
-            {heatMapActive && heatProgress < 100 ? `${heatProgress}%` : "Heat Map"}
+            {heatMapActive && heatProgress < 100 ? `${heatProgress}%` : t("graph.heatMapLabel", { defaultValue: "Heat Map" })}
           </span>
         </span>
       </button>
@@ -282,11 +282,11 @@ export function GraphToolbar(props: GraphToolbarProps) {
             ? "text-purple-500 border-purple-500/30 bg-purple-500/10"
             : "text-muted hover:text-foreground border-card-border"
         }`}
-        title="Fingerprint (G)"
+        title={t("graph.fingerprint", { defaultValue: "Fingerprint (G)" })}
       >
         <span className="flex items-center gap-1">
           <FingerprintIcon />
-          <span className="hidden sm:inline">Fingerprint</span>
+          <span className="hidden sm:inline">{t("graph.fingerprintLabel", { defaultValue: "Fingerprint" })}</span>
         </span>
       </button>
 
@@ -299,7 +299,7 @@ export function GraphToolbar(props: GraphToolbarProps) {
               ? "text-severity-good border-severity-good/30 bg-severity-good/10"
               : "text-muted hover:text-foreground border-card-border"
         }`}
-        title={edgeMode === "default" ? "Edges: script type (L)" : edgeMode === "linkability" ? "Edges: linkability (L)" : "Edges: entropy (L)"}
+        title={edgeMode === "default" ? t("graph.edgesScript", { defaultValue: "Edges: script type (L)" }) : edgeMode === "linkability" ? t("graph.edgesLink", { defaultValue: "Edges: linkability (L)" }) : t("graph.edgesEntropy", { defaultValue: "Edges: entropy (L)" })}
       >
         <span className="flex items-center gap-1">
           {edgeMode === "entropy" ? (
@@ -308,7 +308,7 @@ export function GraphToolbar(props: GraphToolbarProps) {
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" /><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" /></svg>
           )}
           <span className="hidden sm:inline">
-            {edgeMode === "default" ? "Edges" : edgeMode === "linkability" ? "Linkability" : "Entropy"}
+            {edgeMode === "default" ? t("graph.edges", { defaultValue: "Edges" }) : edgeMode === "linkability" ? t("graph.linkability", { defaultValue: "Linkability" }) : t("graph.entropy", { defaultValue: "Entropy" })}
           </span>
         </span>
       </button>
@@ -324,11 +324,11 @@ export function GraphToolbar(props: GraphToolbarProps) {
               ? "text-amber-400 border-amber-400/30 bg-amber-400/10"
               : "text-muted hover:text-foreground border-card-border"
           }`}
-          title="Annotate (A)"
+          title={t("graph.annotate", { defaultValue: "Annotate (A)" })}
         >
           <span className="flex items-center gap-1">
             <Pencil size={12} />
-            <span className="hidden sm:inline">Annotate</span>
+            <span className="hidden sm:inline">{t("graph.annotateLabel", { defaultValue: "Annotate" })}</span>
           </span>
         </button>
       )}
@@ -340,19 +340,19 @@ export function GraphToolbar(props: GraphToolbarProps) {
         onClick={onUndo}
         disabled={!canUndo}
         className={canUndo ? btnOff : btnDisabled}
-        title="Undo (U)"
+        title={t("graph.undo", { defaultValue: "Undo (U)" })}
       >
         <span className="flex items-center gap-1">
           <UndoIcon />
-          <span className="hidden sm:inline">Undo</span>
+          <span className="hidden sm:inline">{t("graph.undoLabel", { defaultValue: "Undo" })}</span>
         </span>
       </button>
 
       {nodeCount > 1 && (
-        <button onClick={onReset} className={btnOff} title="Reset (R)">
+        <button onClick={onReset} className={btnOff} title={t("graph.reset", { defaultValue: "Reset (R)" })}>
           <span className="flex items-center gap-1">
             <ResetIcon />
-            <span className="hidden sm:inline">Reset</span>
+            <span className="hidden sm:inline">{t("graph.resetLabel", { defaultValue: "Reset" })}</span>
           </span>
         </button>
       )}
@@ -361,12 +361,12 @@ export function GraphToolbar(props: GraphToolbarProps) {
       {onZoomIn && onZoomOut && (
         <>
           {SEP}
-          <button onClick={onZoomIn} className={btnOff} title="Zoom in (+)">+</button>
-          <button onClick={onZoomOut} className={btnOff} title="Zoom out (-)">-</button>
+          <button onClick={onZoomIn} className={btnOff} title={t("graph.zoomIn", { defaultValue: "Zoom in (+)" })}>+</button>
+          <button onClick={onZoomOut} className={btnOff} title={t("graph.zoomOut", { defaultValue: "Zoom out (-)" })}>-</button>
         </>
       )}
       {onFitView && (
-        <button onClick={onFitView} className={btnOff} title="Fit to view (0)">Fit</button>
+        <button onClick={onFitView} className={btnOff} title={t("graph.fitView", { defaultValue: "Fit to view (0)" })}>{t("graph.fit", { defaultValue: "Fit" })}</button>
       )}
 
       {/* ── Save / Load / Share (right-aligned) ─────────────── */}
@@ -381,11 +381,11 @@ export function GraphToolbar(props: GraphToolbarProps) {
               }}
               disabled={isEmpty}
               className={isEmpty ? btnDisabled : btnOff}
-              title="Save graph (S)"
+              title={t("graph.save", { defaultValue: "Save graph (S)" })}
             >
               <span className="flex items-center gap-1">
                 <Save size={14} />
-                <span className="hidden sm:inline">Save</span>
+                <span className="hidden sm:inline">{t("graph.saveLabel", { defaultValue: "Save" })}</span>
               </span>
             </button>
 
@@ -393,11 +393,11 @@ export function GraphToolbar(props: GraphToolbarProps) {
               <button
                 onClick={() => { setActivePanel(activePanel === "load" ? null : "load"); setConfirmDeleteId(null); }}
                 className={btnOff}
-                title="Open saved graph (O)"
+                title={t("graph.open", { defaultValue: "Open saved graph (O)" })}
               >
                 <span className="flex items-center gap-1">
                   <FolderOpen size={14} />
-                  <span className="hidden sm:inline">Open</span>
+                  <span className="hidden sm:inline">{t("graph.openLabel", { defaultValue: "Open" })}</span>
                 </span>
               </button>
             )}
@@ -406,11 +406,11 @@ export function GraphToolbar(props: GraphToolbarProps) {
               onClick={handleShare}
               disabled={isEmpty}
               className={isEmpty ? btnDisabled : btnOff}
-              title="Copy share link (C)"
+              title={t("graph.share", { defaultValue: "Copy share link (C)" })}
             >
               <span className="flex items-center gap-1">
                 <Link2 size={14} />
-                <span className="hidden sm:inline">Share</span>
+                <span className="hidden sm:inline">{t("graph.shareLabel", { defaultValue: "Share" })}</span>
               </span>
             </button>
 
@@ -418,25 +418,25 @@ export function GraphToolbar(props: GraphToolbarProps) {
             {activePanel === "save" && (
               <div className="absolute top-full right-0 mt-2 z-30 glass rounded-xl border border-glass-border p-3 w-72">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs font-medium text-foreground">Save Graph</span>
+                  <span className="text-xs font-medium text-foreground">{t("graph.saveGraph", { defaultValue: "Save Graph" })}</span>
                   <button onClick={() => setActivePanel(null)} className="text-muted hover:text-foreground cursor-pointer"><X size={12} /></button>
                 </div>
                 <input
                   type="text"
                   value={saveName}
                   onChange={(e) => setSaveName(e.target.value)}
-                  placeholder="Graph name..."
+                  placeholder={t("graph.graphName", { defaultValue: "Graph name..." })}
                   className="w-full bg-surface-inset text-sm text-foreground placeholder:text-muted/60 rounded-lg px-2.5 py-1.5 outline-none border border-card-border mb-2"
                   autoFocus
                   onKeyDown={(e) => { if (e.key === "Enter") handleSave(); if (e.key === "Escape") setActivePanel(null); }}
                 />
                 <div className="flex gap-2">
                   <button onClick={handleSave} className="flex-1 text-xs bg-bitcoin/20 text-bitcoin hover:bg-bitcoin/30 rounded-lg px-3 py-1.5 transition-colors cursor-pointer">
-                    Save
+                    {t("graph.saveLabel", { defaultValue: "Save" })}
                   </button>
                   {currentGraphId && (
                     <button onClick={handleUpdate} className="flex-1 text-xs bg-surface-inset text-muted hover:text-foreground rounded-lg px-3 py-1.5 transition-colors cursor-pointer border border-card-border">
-                      Update
+                      {t("graph.update", { defaultValue: "Update" })}
                     </button>
                   )}
                 </div>
@@ -447,11 +447,11 @@ export function GraphToolbar(props: GraphToolbarProps) {
             {activePanel === "load" && onLoadSavedGraph && (
               <div className="absolute top-full right-0 mt-2 z-30 glass rounded-xl border border-glass-border w-80 max-h-80 overflow-y-auto">
                 <div className="sticky top-0 glass border-b border-glass-border px-3 py-2 flex items-center justify-between">
-                  <span className="text-xs font-medium text-foreground">Saved Graphs</span>
+                  <span className="text-xs font-medium text-foreground">{t("graph.savedGraphs", { defaultValue: "Saved Graphs" })}</span>
                   <button onClick={() => setActivePanel(null)} className="text-muted hover:text-foreground cursor-pointer"><X size={12} /></button>
                 </div>
                 {graphs.length === 0 ? (
-                  <div className="px-3 py-6 text-center text-xs text-muted">No saved graphs yet</div>
+                  <div className="px-3 py-6 text-center text-xs text-muted">{t("graph.noSavedGraphs", { defaultValue: "No saved graphs yet" })}</div>
                 ) : (
                   <div className="py-1">
                     {graphs.map((g) => (
@@ -496,7 +496,7 @@ export function GraphToolbar(props: GraphToolbarProps) {
       {onExpandFullscreen && (
         <>
           {!hasSaveLoad && <div className="ml-auto" />}
-          <button onClick={onExpandFullscreen} className={btnOff} title="Fullscreen (F)">
+          <button onClick={onExpandFullscreen} className={btnOff} title={t("graph.fullscreen", { defaultValue: "Fullscreen (F)" })}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <polyline points="15 3 21 3 21 9" /><polyline points="9 21 3 21 3 15" />
               <line x1="21" y1="3" x2="14" y2="10" /><line x1="3" y1="21" x2="10" y2="14" />
