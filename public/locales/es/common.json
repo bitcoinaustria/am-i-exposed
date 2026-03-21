@@ -1125,7 +1125,7 @@
   "mistakes.lnFromExchange": "Abrir un canal Lightning directamente desde un retiro de exchange",
   "mistakes.lnFromExchangeDesc": "Esto vincula tu identidad Lightning con tu cuenta de exchange. Mantiene los fondos KYC separados - envialos solo a almacenamiento frio. Si necesitas Lightning para gastos privados, financia canales desde fuentes sin KYC (P2P, cajero, mineria, ingresos).",
   "mistakes.rbfChangeReveal": "Hacer fee bump en una transaccion sensible a privacidad",
-  "mistakes.rbfChangeRevealDesc": "Tanto RBF como CPFP revelan informacion sobre las salidas de cambio. El reemplazo RBF muestra que valor de salida disminuyo (cambio), mientras que CPFP revela el cambio al gastarlo como entrada hija. Para transacciones sensibles a privacidad, establece una tarifa adecuada desde el inicio para evitar fee bumping.",
+  "mistakes.rbfChangeRevealDesc": "RBF revela definitivamente la salida de cambio - cuando se reemplaza una transaccion, la salida cuyo valor disminuyo es obviamente el cambio. CPFP es mejor para la privacidad porque tanto el emisor como el receptor pueden aumentar la tarifa, asi que una transaccion hija gastando una salida no prueba que sea cambio. Si es necesario aumentar la tarifa en una transaccion sensible a privacidad, prefiere CPFP sobre RBF. Idealmente, establece una tarifa adecuada desde el inicio.",
   "mistakes.reuseAddress": "Cambiar de billetera pero reutilizar la dirección del receptor",
   "mistakes.reuseAddressDesc": "Cambiar de billetera mejora la huella, pero si reutilizás la misma dirección de recepción, todo el historial de transacciones previo sigue vinculado.",
   "mistakes.sameSwapService": "Usar el mismo servicio de swap para entrada y salida",
