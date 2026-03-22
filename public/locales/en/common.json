@@ -2029,6 +2029,7 @@
   "walletGuide.colAntiFeeSniping": "Anti-snip",
   "walletGuide.colBad": "Bad",
   "walletGuide.colBip47": "BIP47",
+  "walletGuide.colCoinControl": "Coin Control",
   "walletGuide.colCriteria": "Criteria",
   "walletGuide.colGood": "Good",
   "walletGuide.colOwnNode": "Own Node",

@@ -9,6 +9,7 @@ interface WalletEntry {
   payJoin: boolean | "v1-only" | "stowaway";
   bip47: boolean;
   silentPayments: boolean | "send-only";
+  coinControl: boolean | "partial";
   ownNode: boolean | "partial" | "is-node";
   tor: boolean | "partial" | "native" | "orbot-vpn" | "orbot-proxy";
   url: string;
@@ -24,6 +25,7 @@ export const RECOMMENDED_WALLETS: WalletEntry[] = [
     payJoin: "v1-only",
     bip47: true,
     silentPayments: "send-only",
+    coinControl: true,
     ownNode: true,
     tor: true,
     url: "https://sparrowwallet.com",
@@ -37,6 +39,7 @@ export const RECOMMENDED_WALLETS: WalletEntry[] = [
     payJoin: false,
     bip47: false,
     silentPayments: true,
+    coinControl: true,
     ownNode: "is-node",
     tor: true,
     url: "https://bitcoincore.org",
@@ -50,6 +53,7 @@ export const RECOMMENDED_WALLETS: WalletEntry[] = [
     payJoin: false,
     bip47: false,
     silentPayments: false,
+    coinControl: true,
     ownNode: true,
     tor: "orbot-proxy",
     url: "https://electrum.org",
@@ -63,6 +67,7 @@ export const RECOMMENDED_WALLETS: WalletEntry[] = [
     payJoin: "stowaway",
     bip47: true,
     silentPayments: false,
+    coinControl: true,
     ownNode: true,
     tor: "native",
     url: "https://ashigaru.rs",
@@ -76,12 +81,13 @@ export const RECOMMENDED_WALLETS: WalletEntry[] = [
     payJoin: false,
     bip47: false,
     silentPayments: false,
+    coinControl: true,
     ownNode: true,
     tor: "partial",
     url: "https://trezor.io/trezor-suite",
   },
   {
-    name: "Blockstream Green",
+    name: "Blockstream App",
     type: ["desktop", "mobile"],
     nSequence: "good",
     antiFeeSniping: true,
@@ -89,6 +95,7 @@ export const RECOMMENDED_WALLETS: WalletEntry[] = [
     payJoin: false,
     bip47: false,
     silentPayments: "send-only",
+    coinControl: "partial",
     ownNode: true,
     tor: true,
     url: "https://blockstream.com/green",
@@ -102,6 +109,7 @@ export const RECOMMENDED_WALLETS: WalletEntry[] = [
     payJoin: false,
     bip47: false,
     silentPayments: true,
+    coinControl: true,
     ownNode: true,
     tor: "orbot-vpn",
     url: "https://nunchuk.io",
@@ -115,6 +123,7 @@ export const RECOMMENDED_WALLETS: WalletEntry[] = [
     payJoin: false,
     bip47: false,
     silentPayments: "send-only",
+    coinControl: true,
     ownNode: true,
     tor: "native",
     url: "https://wasabiwallet.io",
@@ -128,6 +137,7 @@ export const RECOMMENDED_WALLETS: WalletEntry[] = [
     payJoin: true,
     bip47: false,
     silentPayments: true,
+    coinControl: true,
     ownNode: true,
     tor: true,
     url: "https://cakewallet.com",
@@ -141,6 +151,7 @@ export const RECOMMENDED_WALLETS: WalletEntry[] = [
     payJoin: true,
     bip47: false,
     silentPayments: false,
+    coinControl: true,
     ownNode: true,
     tor: "orbot-proxy",
     url: "https://bullbitcoin.com",
@@ -154,6 +165,7 @@ export const RECOMMENDED_WALLETS: WalletEntry[] = [
     payJoin: false,
     bip47: true,
     silentPayments: "send-only",
+    coinControl: true,
     ownNode: true,
     tor: "orbot-vpn",
     url: "https://bluewallet.io",

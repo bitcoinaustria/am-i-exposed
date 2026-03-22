@@ -65,6 +65,7 @@ export function WalletComparison() {
                 <th className="text-center px-2 py-2 font-medium whitespace-nowrap">{t("walletGuide.colPayJoin", { defaultValue: "PayJoin" })}</th>
                 <th className="text-center px-2 py-2 font-medium whitespace-nowrap" title="BIP47 / Paynym">{t("walletGuide.colBip47", { defaultValue: "BIP47" })}</th>
                 <th className="text-center px-2 py-2 font-medium whitespace-nowrap" title="Silent Payments (BIP352)">{t("walletGuide.colSilentPay", { defaultValue: "SP" })}</th>
+                <th className="text-center px-2 py-2 font-medium whitespace-nowrap">{t("walletGuide.colCoinControl", { defaultValue: "Coin Control" })}</th>
                 <th className="text-center px-2 py-2 font-medium">{t("walletGuide.colOwnNode", { defaultValue: "Own Node" })}</th>
                 <th className="text-center px-2 py-2 font-medium">Tor</th>
               </tr>
@@ -91,6 +92,7 @@ export function WalletComparison() {
                   <td className="text-center px-2 py-2"><BoolCell value={w.payJoin} /></td>
                   <td className="text-center px-2 py-2"><BoolCell value={w.bip47} /></td>
                   <td className="text-center px-2 py-2"><BoolCell value={w.silentPayments} /></td>
+                  <td className="text-center px-2 py-2"><BoolCell value={w.coinControl} /></td>
                   <td className="text-center px-2 py-2"><BoolCell value={w.ownNode} /></td>
                   <td className="text-center px-2 py-2"><BoolCell value={w.tor} /></td>
                 </tr>
