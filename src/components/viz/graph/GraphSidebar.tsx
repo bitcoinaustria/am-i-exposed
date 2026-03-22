@@ -112,6 +112,17 @@ export function GraphSidebar({
         <div className="flex items-center gap-2 min-w-0">
           <span className="font-mono text-xs text-foreground/70 truncate">{truncateId(tx.txid, 10)}</span>
           <CopyButton text={tx.txid} variant="inline" />
+          <button
+            onClick={(e) => { e.stopPropagation(); window.open(`${window.location.origin}${window.location.pathname}#tx=${tx.txid}`, "_blank"); }}
+            className="text-muted/60 hover:text-foreground transition-colors cursor-pointer"
+            title={t("graph.openInNewTab", { defaultValue: "Open in new tab" })}
+          >
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+              <polyline points="15 3 21 3 21 9" />
+              <line x1="10" y1="14" x2="21" y2="3" />
+            </svg>
+          </button>
         </div>
         <div className="flex items-center gap-1 shrink-0">
           {onCollapse && (

@@ -961,6 +961,7 @@
   "graph.noSavedGraphs": "Nenhum grafo salvo ainda",
   "graph.opReturn": "OP_RETURN",
   "graph.open": "Abrir grafo salvo (O)",
+  "graph.openInNewTab": "Abrir em nova aba",
   "graph.openLabel": "Abrir",
   "graph.overflowMore": "... +{{count}} mais",
   "graph.reset": "Reiniciar (R)",
