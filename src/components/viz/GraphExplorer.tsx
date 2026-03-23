@@ -155,23 +155,45 @@ export function GraphExplorer(props: GraphExplorerProps) {
     prevNodeKeysRef.current = new Set(props.nodes.keys());
   }, [props.nodes, dispatch, findFreeY]);
 
-  const { onExpandInput, onExpandOutput } = props;
+  const { onExpandInput, onExpandOutput, onExpandPortInput, onExpandPortOutput } = props;
+
+  // Seed position before any expand (backward or forward, node button or port)
+  const seedBackward = useCallback((txid: string) => {
+    const triggerPos = nodePositionsRef.current.get(txid);
+    if (triggerPos) {
+      const y = findFreeY(triggerPos.x - 280, triggerPos.y, undefined);
+      pendingSeedRef.current = { triggerTxid: txid, direction: "backward", x: triggerPos.x - 280, y };
+    }
+  }, [nodePositionsRef, findFreeY]);
+
+  const seedForward = useCallback((txid: string) => {
+    const triggerPos = nodePositionsRef.current.get(txid);
+    if (triggerPos) {
+      const targetX = triggerPos.x + triggerPos.w + 100;
+      const y = findFreeY(targetX, triggerPos.y, undefined);
+      pendingSeedRef.current = { triggerTxid: txid, direction: "forward", x: targetX, y };
+    }
+  }, [nodePositionsRef, findFreeY]);
 
   const handleExpandInput = useCallback((txid: string, inputIndex: number) => {
-    const triggerPos = nodePositionsRef.current.get(txid);
-    if (triggerPos) {
-      pendingSeedRef.current = { triggerTxid: txid, direction: "backward", x: triggerPos.x - 280, y: triggerPos.y };
-    }
+    seedBackward(txid);
     onExpandInput?.(txid, inputIndex);
-  }, [onExpandInput, nodePositionsRef]);
+  }, [onExpandInput, seedBackward]);
 
   const handleExpandOutput = useCallback((txid: string, outputIndex: number) => {
-    const triggerPos = nodePositionsRef.current.get(txid);
-    if (triggerPos) {
-      pendingSeedRef.current = { triggerTxid: txid, direction: "forward", x: triggerPos.x + triggerPos.w + 100, y: triggerPos.y };
-    }
+    seedForward(txid);
     onExpandOutput?.(txid, outputIndex);
-  }, [onExpandOutput, nodePositionsRef]);
+  }, [onExpandOutput, seedForward]);
+
+  const handleExpandPortInput = useCallback((txid: string, inputIndex: number) => {
+    seedBackward(txid);
+    onExpandPortInput?.(txid, inputIndex);
+  }, [onExpandPortInput, seedBackward]);
+
+  const handleExpandPortOutput = useCallback((txid: string, outputIndex: number) => {
+    seedForward(txid);
+    onExpandPortOutput?.(txid, outputIndex);
+  }, [onExpandPortOutput, seedForward]);
 
   // ─── Boltzmann ─────────────────────────────────────────
   const {
@@ -309,6 +331,8 @@ export function GraphExplorer(props: GraphExplorerProps) {
     ...props,
     onExpandInput: handleExpandInput,
     onExpandOutput: handleExpandOutput,
+    onExpandPortInput: handleExpandPortInput,
+    onExpandPortOutput: handleExpandPortOutput,
     tooltip, scrollRef, filter, hoveredNode,
     setHoveredNode: (txid: string | null) => dispatch({ type: "SET_HOVERED_NODE", txid }),
     selectedNode,
