@@ -59,9 +59,12 @@ export function useNodeDragging({
     };
   }, [onNodePositionChange, viewTransform, annotateMode]);
 
+  // Keep a ref to the latest viewTransform so drag handlers always use current scale
+  const viewTransformRef = useRef(viewTransform);
+  useEffect(() => { viewTransformRef.current = viewTransform; }, [viewTransform]);
+
   useEffect(() => {
     if (!onNodePositionChange || !viewTransform) return;
-    const scale = viewTransform.scale;
 
     const handleMouseMove = (e: MouseEvent) => {
       const drag = nodeDragRef.current;
@@ -71,8 +74,9 @@ export function useNodeDragging({
       if (!drag.isDragging && Math.sqrt(dx * dx + dy * dy) < 5) return;
       drag.isDragging = true;
       setDraggingTxid(drag.txid);
-      const newX = drag.startNodeX + dx / scale;
-      const newY = drag.startNodeY + dy / scale;
+      const s = viewTransformRef.current?.scale ?? 1;
+      const newX = drag.startNodeX + dx / s;
+      const newY = drag.startNodeY + dy / s;
       onNodePositionChange(drag.txid, newX, newY);
     };
 
@@ -99,8 +103,9 @@ export function useNodeDragging({
       // Prevent scroll while dragging a node
       e.preventDefault();
       setDraggingTxid(drag.txid);
-      const newX = drag.startNodeX + dx / scale;
-      const newY = drag.startNodeY + dy / scale;
+      const s = viewTransformRef.current?.scale ?? 1;
+      const newX = drag.startNodeX + dx / s;
+      const newY = drag.startNodeY + dy / s;
       onNodePositionChange(drag.txid, newX, newY);
     };
 

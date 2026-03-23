@@ -140,6 +140,24 @@ export function GraphCanvas({
     onLayoutComplete?.({ visibleCount: layoutNodes.length, nodePositions, containerWidth, containerHeight: containerHeight ?? 0 });
   }, [layoutNodes.length, nodePositions, onLayoutComplete, containerWidth, containerHeight]);
 
+  // Auto-center on first fullscreen render when viewTransform is unset or default.
+  // GraphCanvas knows the real containerWidth/containerHeight from ParentSize,
+  // so it can compute the correct centering without guessing.
+  const hasAutoCenteredRef = useRef(false);
+  useEffect(() => {
+    if (!isFullscreen || !onViewTransformChange || hasAutoCenteredRef.current) return;
+    if (layoutNodes.length === 0 || containerWidth <= 0) return;
+    const ch = containerHeight ?? 0;
+    if (ch <= 0) return;
+
+    hasAutoCenteredRef.current = true;
+    const roots = layoutNodes.filter((n) => n.isRoot);
+    const targets = roots.length > 0 ? roots : layoutNodes;
+    const avgX = targets.reduce((s, n) => s + n.x + n.width / 2, 0) / targets.length;
+    const avgY = targets.reduce((s, n) => s + n.y + n.height / 2, 0) / targets.length;
+    onViewTransformChange({ x: containerWidth / 2 - avgX, y: ch / 2 - avgY, scale: 1 });
+  }, [isFullscreen, layoutNodes, containerWidth, containerHeight, onViewTransformChange]);
+
   const svgWidth = Math.max(containerWidth, width);
   const svgHeight = Math.max(isFullscreen ? (containerHeight ?? height) : height, 150);
 
