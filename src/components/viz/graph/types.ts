@@ -209,8 +209,8 @@ export interface GraphCanvasProps extends GraphExplorerProps {
   entropyGradientMode?: boolean;
   /** Change-marked output keys: "${txid}:${outputIndex}". Edges from these render orange. */
   changeOutputs?: Set<string>;
-  /** Called after layout with visible node count (avoids redundant layout computation). */
-  onLayoutComplete?: (info: { visibleCount: number }) => void;
+  /** Called after layout with visible node count and node positions. */
+  onLayoutComplete?: (info: { visibleCount: number; nodePositions: Map<string, { x: number; y: number; w: number; h: number }> }) => void;
   /** Boltzmann results for any node (not just root). Keyed by txid. */
   boltzmannCache?: Map<string, BoltzmannWorkerResult>;
 }

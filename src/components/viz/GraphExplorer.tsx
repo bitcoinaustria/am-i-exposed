@@ -80,6 +80,7 @@ export function GraphExplorer(props: GraphExplorerProps) {
     handleToggleHeatMap, handleToggleFingerprint,
     handleLayoutComplete, handleFullscreenExit,
     restoreSavedGraph, restoreFromLastLoaded,
+    nodePositionsRef,
   } = useGraphExplorerState(props.alwaysFullscreen);
 
   const {
@@ -100,6 +101,44 @@ export function GraphExplorer(props: GraphExplorerProps) {
   // Sidebar tx data
   const sidebarTx = props.expandedNodeTxid ? props.nodes.get(props.expandedNodeTxid)?.tx : undefined;
   const showSidebar = !!sidebarTx && !sidebarCollapsed;
+
+  // Seed new nodes near their trigger node.
+  // Track the trigger position for the next expansion (backward or forward).
+  const pendingSeedRef = useRef<{ triggerTxid: string; direction: "backward" | "forward"; x: number; y: number } | null>(null);
+  const prevNodeKeysRef = useRef<Set<string>>(new Set());
+
+  // When nodes change, detect new nodes and seed their position
+  useEffect(() => {
+    const seed = pendingSeedRef.current;
+    if (!seed) { prevNodeKeysRef.current = new Set(props.nodes.keys()); return; }
+    const prevKeys = prevNodeKeysRef.current;
+    for (const txid of props.nodes.keys()) {
+      if (!prevKeys.has(txid)) {
+        dispatch({ type: "SET_NODE_POSITION", txid, x: seed.x, y: seed.y });
+        pendingSeedRef.current = null;
+        break;
+      }
+    }
+    prevNodeKeysRef.current = new Set(props.nodes.keys());
+  }, [props.nodes, dispatch]);
+
+  const { onExpandInput, onExpandOutput } = props;
+
+  const handleExpandInput = useCallback((txid: string, inputIndex: number) => {
+    const triggerPos = nodePositionsRef.current.get(txid);
+    if (triggerPos) {
+      pendingSeedRef.current = { triggerTxid: txid, direction: "backward", x: triggerPos.x - 280, y: triggerPos.y };
+    }
+    onExpandInput?.(txid, inputIndex);
+  }, [onExpandInput, nodePositionsRef]);
+
+  const handleExpandOutput = useCallback((txid: string, outputIndex: number) => {
+    const triggerPos = nodePositionsRef.current.get(txid);
+    if (triggerPos) {
+      pendingSeedRef.current = { triggerTxid: txid, direction: "forward", x: triggerPos.x + triggerPos.w + 100, y: triggerPos.y };
+    }
+    onExpandOutput?.(txid, outputIndex);
+  }, [onExpandOutput, nodePositionsRef]);
 
   // ─── Boltzmann ─────────────────────────────────────────
   const {
@@ -283,8 +322,8 @@ export function GraphExplorer(props: GraphExplorerProps) {
           onClose={() => props.onToggleExpand?.(props.expandedNodeTxid!)}
           onCollapse={() => dispatch({ type: "SET_SIDEBAR_COLLAPSED", collapsed: true })}
           onFullScan={(txid) => props.onTxClick?.(txid)}
-          onExpandInput={props.onExpandInput}
-          onExpandOutput={props.onExpandOutput}
+          onExpandInput={handleExpandInput}
+          onExpandOutput={handleExpandOutput}
           changeOutputs={changeOutputs}
           onToggleChange={toggleChange}
           boltzmannResult={props.expandedNodeTxid ? getBoltzmannResult(props.expandedNodeTxid) : undefined}

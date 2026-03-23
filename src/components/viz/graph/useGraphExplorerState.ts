@@ -263,8 +263,11 @@ export function useGraphExplorerState(alwaysFullscreen?: boolean) {
     dispatch({ type: "TOGGLE_FINGERPRINT" });
   }, []);
 
-  const handleLayoutComplete = useCallback((info: { visibleCount: number }) => {
+  const nodePositionsRef = useRef<Map<string, { x: number; y: number; w: number; h: number }>>(new Map());
+
+  const handleLayoutComplete = useCallback((info: { visibleCount: number; nodePositions: Map<string, { x: number; y: number; w: number; h: number }> }) => {
     dispatch({ type: "SET_VISIBLE_COUNT", count: info.visibleCount });
+    nodePositionsRef.current = info.nodePositions;
   }, []);
 
   const handleFullscreenExit = useCallback(() => {
@@ -297,5 +300,6 @@ export function useGraphExplorerState(alwaysFullscreen?: boolean) {
     handleFullscreenExit,
     restoreSavedGraph,
     restoreFromLastLoaded,
+    nodePositionsRef,
   };
 }

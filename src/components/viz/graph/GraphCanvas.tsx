@@ -123,7 +123,7 @@ export function GraphCanvas({
 
   // ─── Layout + derived graph data ──────────────────────────────
   const {
-    layoutNodes, edges, width, height,
+    layoutNodes, edges, width, height, nodePositions,
     ricochetHopLabels, portPositions,
     maxEdgeValue, edgeScriptInfo,
     detChainEdges, entropyEdges,
@@ -137,8 +137,8 @@ export function GraphCanvas({
 
   // Report visible count to parent (eliminates redundant layout call)
   useEffect(() => {
-    onLayoutComplete?.({ visibleCount: layoutNodes.length });
-  }, [layoutNodes.length, onLayoutComplete]);
+    onLayoutComplete?.({ visibleCount: layoutNodes.length, nodePositions });
+  }, [layoutNodes.length, nodePositions, onLayoutComplete]);
 
   const svgWidth = Math.max(containerWidth, width);
   const svgHeight = Math.max(isFullscreen ? (containerHeight ?? height) : height, 150);
