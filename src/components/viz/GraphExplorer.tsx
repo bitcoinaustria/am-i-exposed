@@ -103,9 +103,41 @@ export function GraphExplorer(props: GraphExplorerProps) {
   const showSidebar = !!sidebarTx && !sidebarCollapsed;
 
   // Seed new nodes near their trigger node.
-  // Track the trigger position for the next expansion (backward or forward).
   const pendingSeedRef = useRef<{ triggerTxid: string; direction: "backward" | "forward"; x: number; y: number } | null>(null);
   const prevNodeKeysRef = useRef<Set<string>>(new Set());
+
+  // Find a y position that doesn't overlap existing nodes near the target x.
+  // Scans nodePositions + overrides for occupied y slots and nudges down.
+  const findFreeY = useCallback((targetX: number, targetY: number, excludeTxid?: string): number => {
+    const NODE_SLOT = 80; // NODE_H(56) + ROW_GAP(24)
+    const X_TOLERANCE = 300; // only check nodes in nearby columns
+    const occupied: number[] = [];
+
+    // Collect y positions of nodes near the target x
+    for (const [txid, pos] of nodePositionsRef.current) {
+      if (txid === excludeTxid) continue;
+      if (Math.abs(pos.x - targetX) < X_TOLERANCE) {
+        occupied.push(pos.y);
+      }
+    }
+    // Also check pending overrides
+    for (const [txid, pos] of nodePositionOverrides) {
+      if (txid === excludeTxid) continue;
+      if (Math.abs(pos.x - targetX) < X_TOLERANCE) {
+        occupied.push(pos.y);
+      }
+    }
+
+    let y = targetY;
+    let attempts = 0;
+    while (attempts < 50) {
+      const collision = occupied.some((oy) => Math.abs(oy - y) < NODE_SLOT);
+      if (!collision) return y;
+      y += NODE_SLOT;
+      attempts++;
+    }
+    return y;
+  }, [nodePositionsRef, nodePositionOverrides]);
 
   // When nodes change, detect new nodes and seed their position
   useEffect(() => {
@@ -114,13 +146,14 @@ export function GraphExplorer(props: GraphExplorerProps) {
     const prevKeys = prevNodeKeysRef.current;
     for (const txid of props.nodes.keys()) {
       if (!prevKeys.has(txid)) {
-        dispatch({ type: "SET_NODE_POSITION", txid, x: seed.x, y: seed.y });
+        const y = findFreeY(seed.x, seed.y, txid);
+        dispatch({ type: "SET_NODE_POSITION", txid, x: seed.x, y });
         pendingSeedRef.current = null;
         break;
       }
     }
     prevNodeKeysRef.current = new Set(props.nodes.keys());
-  }, [props.nodes, dispatch]);
+  }, [props.nodes, dispatch, findFreeY]);
 
   const { onExpandInput, onExpandOutput } = props;
 
