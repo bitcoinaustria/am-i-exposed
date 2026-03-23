@@ -23,21 +23,25 @@ import type { GraphAnnotation, SavedGraph } from "@/lib/graph/saved-graph-types"
 // Re-export types for consumers that import from this file
 export type { GraphExplorerProps } from "./graph/types";
 
-/** Vertical padding subtracted from window.innerHeight for viewport calculations. */
-const VIEWPORT_PAD_Y = 160;
 /** Minimum horizontal margin on each side for small screens. */
 const MIN_MARGIN_X = 16;
+/** Fallback vertical padding when no container ref is available. */
+const FALLBACK_PAD_Y = 160;
 
-/** Compute the usable viewport dimensions (window minus padding). */
-function getViewportDims() {
-  // On small screens (<400px), use tighter padding to maximize usable space.
+/** Compute the usable viewport dimensions from container element or window fallback. */
+function getViewportDims(containerEl?: HTMLElement | null) {
+  if (containerEl) {
+    const rect = containerEl.getBoundingClientRect();
+    return { cw: Math.max(rect.width - 16, 100), ch: Math.max(rect.height - 16, 100) };
+  }
+  // Fallback: use window dimensions with padding
   const padX = Math.max(MIN_MARGIN_X * 2, Math.min(48, window.innerWidth * 0.08));
-  return { cw: window.innerWidth - padX, ch: window.innerHeight - VIEWPORT_PAD_Y };
+  return { cw: window.innerWidth - padX, ch: window.innerHeight - FALLBACK_PAD_Y };
 }
 
 /** Compute a ViewTransform that centers the root nodes within the viewport. */
-function computeRootCenterView(roots: LayoutNode[]): ViewTransform {
-  const { cw, ch } = getViewportDims();
+function computeRootCenterView(roots: LayoutNode[], containerEl?: HTMLElement | null): ViewTransform {
+  const { cw, ch } = getViewportDims(containerEl);
   if (roots.length === 0) return { x: 0, y: 0, scale: 1 };
   const avgX = roots.reduce((s, n) => s + n.x + n.width / 2, 0) / roots.length;
   const avgY = roots.reduce((s, n) => s + n.y + n.height / 2, 0) / roots.length;
@@ -45,9 +49,9 @@ function computeRootCenterView(roots: LayoutNode[]): ViewTransform {
 }
 
 /** Compute a ViewTransform that fits all layout nodes within the viewport. */
-function computeFitView(ln: LayoutNode[]): ViewTransform | null {
+function computeFitView(ln: LayoutNode[], containerEl?: HTMLElement | null): ViewTransform | null {
   if (ln.length === 0) return null;
-  const { cw, ch } = getViewportDims();
+  const { cw, ch } = getViewportDims(containerEl);
   const minX = Math.min(...ln.map((n) => n.x));
   const minY = Math.min(...ln.map((n) => n.y));
   const maxX = Math.max(...ln.map((n) => n.x + n.width));
@@ -216,7 +220,7 @@ export function GraphExplorer(props: GraphExplorerProps) {
   // Zoom helper
   const zoomBy = useCallback((factor: number) => {
     if (!viewTransform) return;
-    const { cw, ch } = getViewportDims();
+    const { cw, ch } = getViewportDims(scrollRef.current);
     const cx = cw / 2;
     const cy = ch / 2;
     const gx = (cx - viewTransform.x) / viewTransform.scale;
@@ -237,14 +241,17 @@ export function GraphExplorer(props: GraphExplorerProps) {
   const handleExpandFullscreen = useCallback(() => {
     expandFullscreen();
     const { layoutNodes: ln } = layoutGraph(props.nodes, props.rootTxid, filter, props.rootTxids, undefined, true);
-    dispatch({ type: "SET_VIEW_TRANSFORM", vt: computeRootCenterView(ln.filter((n) => n.isRoot)) });
-  }, [expandFullscreen, props.nodes, props.rootTxid, filter, props.rootTxids, dispatch]);
+    // Use rAF to measure after fullscreen layout settles
+    requestAnimationFrame(() => {
+      dispatch({ type: "SET_VIEW_TRANSFORM", vt: computeRootCenterView(ln.filter((n) => n.isRoot), scrollRef.current) });
+    });
+  }, [expandFullscreen, props.nodes, props.rootTxid, filter, props.rootTxids, dispatch, scrollRef]);
 
   const handleFitView = useCallback(() => {
     const { layoutNodes: ln } = layoutGraph(props.nodes, props.rootTxid, filter, props.rootTxids, undefined, true);
-    const vt = computeFitView(ln);
+    const vt = computeFitView(ln, scrollRef.current);
     if (vt) dispatch({ type: "SET_VIEW_TRANSFORM", vt });
-  }, [props.nodes, props.rootTxid, filter, props.rootTxids, dispatch]);
+  }, [props.nodes, props.rootTxid, filter, props.rootTxids, dispatch, scrollRef]);
 
   // Auto-center on root change in alwaysFullscreen mode
   const prevRootRef = useRef<string>("");
@@ -255,7 +262,7 @@ export function GraphExplorer(props: GraphExplorerProps) {
     requestAnimationFrame(() => {
       const { layoutNodes: ln } = layoutGraph(props.nodes, props.rootTxid, filter, props.rootTxids, undefined, true);
       const roots = ln.filter((n) => n.isRoot);
-      if (roots.length > 0) dispatch({ type: "SET_VIEW_TRANSFORM", vt: computeRootCenterView(roots) });
+      if (roots.length > 0) dispatch({ type: "SET_VIEW_TRANSFORM", vt: computeRootCenterView(roots, scrollRef.current) });
     });
   }, [props.alwaysFullscreen, props.rootTxid, props.nodes, filter, props.rootTxids, dispatch]);
 
