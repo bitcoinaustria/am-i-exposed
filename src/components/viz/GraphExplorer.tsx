@@ -220,9 +220,10 @@ export function GraphExplorer(props: GraphExplorerProps) {
   const { isExpanded, expand: expandFullscreen, collapse: collapseFullscreen } = useFullscreen(handleFullscreenExit);
 
   // Zoom helper
+  const containerDims = containerDimsRef.current;
   const zoomBy = useCallback((factor: number) => {
     if (!viewTransform) return;
-    const { cw, ch } = getViewportDims(containerDimsRef.current);
+    const { cw, ch } = getViewportDims(containerDims);
     const cx = cw / 2;
     const cy = ch / 2;
     const gx = (cx - viewTransform.x) / viewTransform.scale;
@@ -256,30 +257,19 @@ export function GraphExplorer(props: GraphExplorerProps) {
   }, [props.nodes, props.rootTxid, filter, props.rootTxids, dispatch, containerDimsRef]);
 
   // Auto-center on root change in alwaysFullscreen mode.
-  // Retries until containerDimsRef has real values from ParentSize.
+  // GraphCanvas handles first-render centering (it knows the real container dims).
+  // This effect handles subsequent root changes (e.g., navigating to a new txid).
   const prevRootRef = useRef<string>("");
   useEffect(() => {
     if (!props.alwaysFullscreen || !props.rootTxid || props.nodes.size === 0) return;
     if (prevRootRef.current === props.rootTxid) return;
     prevRootRef.current = props.rootTxid;
-
-    const doCenter = () => {
-      const dims = containerDimsRef.current;
-      if (!dims || dims.width === 0 || dims.height === 0) return false;
-      const { layoutNodes: ln } = layoutGraph(props.nodes, props.rootTxid, filter, props.rootTxids, undefined, true);
-      const roots = ln.filter((n) => n.isRoot);
-      if (roots.length > 0) dispatch({ type: "SET_VIEW_TRANSFORM", vt: computeRootCenterView(roots, dims) });
-      return true;
-    };
-
-    // Try immediately, then retry up to 10 times at 50ms intervals
-    // until ParentSize has measured the container
-    let attempts = 0;
-    const tryCenter = () => {
-      if (doCenter()) return;
-      if (++attempts < 10) requestAnimationFrame(tryCenter);
-    };
-    requestAnimationFrame(tryCenter);
+    // Skip if containerDims not yet populated (first render handled by GraphCanvas)
+    const dims = containerDimsRef.current;
+    if (!dims || dims.width === 0) return;
+    const { layoutNodes: ln } = layoutGraph(props.nodes, props.rootTxid, filter, props.rootTxids, undefined, true);
+    const roots = ln.filter((n) => n.isRoot);
+    if (roots.length > 0) dispatch({ type: "SET_VIEW_TRANSFORM", vt: computeRootCenterView(roots, dims) });
   }, [props.alwaysFullscreen, props.rootTxid, props.nodes, filter, props.rootTxids, dispatch]);
 
   // ─── Stable callbacks ──────────────────────────────────
