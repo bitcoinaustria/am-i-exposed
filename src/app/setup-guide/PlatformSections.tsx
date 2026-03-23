@@ -285,26 +285,3 @@ export function CorsProxySection() {
   );
 }
 
-export function TorSection() {
-  const { t } = useTranslation();
-
-  return (
-    <section id="tor" className="space-y-4">
-      <h2 className="text-2xl font-semibold text-foreground flex items-center gap-2">
-        <Globe size={22} />
-        {t("setup.tor_title", { defaultValue: "Alternative: Tor Browser + .onion" })}
-      </h2>
-      <div className="bg-card-bg border border-card-border rounded-xl p-6 space-y-4">
-        <p className="text-muted leading-relaxed">
-          {t("setup.tor_p1", { defaultValue: "If both am-i.exposed and your mempool instance are accessed via .onion addresses in Tor Browser, there is no mixed-content blocking (both are HTTP) and Tor Browser relaxes CORS restrictions for .onion-to-.onion requests." })}
-        </p>
-        <p className="text-muted leading-relaxed">
-          {t("setup.tor_p2", { defaultValue: "This requires a .onion mirror of am-i.exposed. If one is available, use Tor Browser to visit the .onion URL, then enter your mempool's .onion address in the settings." })}
-        </p>
-        <p className="text-muted leading-relaxed">
-          {t("setup.tor_p3", { defaultValue: "You still need CORS headers on your mempool nginx if the .onion addresses differ (which they will, since they are separate hidden services)." })}
-        </p>
-      </div>
-    </section>
-  );
-}

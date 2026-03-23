@@ -28,7 +28,6 @@ export const TOC_ITEMS: TocItem[] = [
   { labelKey: "setup.toc_start9", labelDefault: "Start9", id: "start9" },
   { labelKey: "setup.toc_docker", labelDefault: "Docker", id: "docker" },
   { labelKey: "setup.toc_cors", labelDefault: "CORS Proxy", id: "cors-proxy" },
-  { labelKey: "setup.toc_tor", labelDefault: "Tor + .onion", id: "tor" },
   { labelKey: "setup.toc_troubleshooting", labelDefault: "Troubleshooting", id: "troubleshooting" },
 ];
 

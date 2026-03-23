@@ -12,7 +12,6 @@ import {
   Start9Section,
   DockerSection,
   CorsProxySection,
-  TorSection,
 } from "./PlatformSections";
 
 export default function SetupGuidePage() {
@@ -153,7 +152,6 @@ export default function SetupGuidePage() {
         <Start9Section />
         <DockerSection />
         <CorsProxySection />
-        <TorSection />
         <TroubleshootingSection />
 
         {/* Verifying */}
