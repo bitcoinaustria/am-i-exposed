@@ -40,6 +40,15 @@ export function useGraphExpansion(fetcher: GraphExpansionFetcher | null, maxNode
     dispatch({ type: "SET_ROOT", tx });
   }, []);
 
+  /** Load a pre-built graph (e.g. from a saved/shared state). */
+  const loadGraph = useCallback((
+    nodes: Map<string, GraphNode>,
+    rootTxid: string,
+    rootTxids: Set<string>,
+  ) => {
+    dispatch({ type: "LOAD_GRAPH", nodes, rootTxid, rootTxids });
+  }, []);
+
   /** Initialize graph with root + pre-fetched parent/child transactions. */
   const setRootWithNeighbors = useCallback((
     root: MempoolTransaction,
@@ -416,6 +425,7 @@ export function useGraphExpansion(fetcher: GraphExpansionFetcher | null, maxNode
     undoStackLength: state.undoStack.length,
     gotoSnapshot: useCallback((index: number) => dispatch({ type: "GOTO_SNAPSHOT", index }), []),
     setRoot,
+    loadGraph,
     setRootWithNeighbors,
     setRootWithLayers,
     setMultiRoot,

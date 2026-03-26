@@ -108,8 +108,9 @@ export function GraphCanvas({
 
   // Report visible count to parent (eliminates redundant layout call)
   useEffect(() => {
-    onLayoutComplete?.({ visibleCount: layoutNodes.length });
-  }, [layoutNodes.length, onLayoutComplete]);
+    const nodePositions = new Map(layoutNodes.map(n => [n.txid, { x: n.x, y: n.y, w: n.width, h: n.height }]));
+    onLayoutComplete?.({ visibleCount: layoutNodes.length, nodePositions, containerWidth: containerWidth ?? 0, containerHeight: containerHeight ?? 0 });
+  }, [layoutNodes, onLayoutComplete, containerWidth, containerHeight]);
 
   // Pre-compute ricochet hop labels by walking forward from hop 0 nodes
   const ricochetHopLabels = useMemo(() => {

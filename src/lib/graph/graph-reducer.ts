@@ -52,6 +52,7 @@ export type GraphAction =
   | { type: "SET_ROOT_WITH_LAYERS"; root: MempoolTransaction; backwardLayers: TraceLayer[]; forwardLayers: TraceLayer[]; outspends?: MempoolOutspend[]; smartFilter?: boolean }
   | { type: "SET_MULTI_ROOT"; txs: Map<string, MempoolTransaction> }
   | { type: "SET_MULTI_ROOT_WITH_LAYERS"; roots: Map<string, MultiRootEntry>; preExpandBudget?: number }
+  | { type: "LOAD_GRAPH"; nodes: Map<string, GraphNode>; rootTxid: string; rootTxids: Set<string> }
   | { type: "ADD_NODE"; node: GraphNode }
   | { type: "REMOVE_NODE"; txid: string }
   | { type: "SET_LOADING"; txid: string; loading: boolean }
@@ -74,6 +75,16 @@ export interface GraphExpansionFetcher {
 const MAX_UNDO = 50;
 
 export const DEFAULT_MAX_NODES = 100;
+
+/** Create a clean graph state from pre-built nodes. */
+function freshState(
+  nodes: Map<string, GraphNode>,
+  rootTxid: string,
+  rootTxids: Set<string>,
+  maxNodes: number,
+): GraphState {
+  return { nodes, rootTxid, rootTxids, maxNodes, undoStack: [], loading: new Set(), errors: new Map() };
+}
 
 // ─── Helpers ───────────────────────────────────────────────────────────
 
@@ -197,6 +208,9 @@ export function graphReducer(state: GraphState, action: GraphAction): GraphState
         errors: new Map(),
       };
     }
+
+    case "LOAD_GRAPH":
+      return freshState(action.nodes, action.rootTxid, action.rootTxids, state.maxNodes);
 
     case "SET_ROOT_WITH_NEIGHBORS": {
       const rootTxid = action.root.txid;

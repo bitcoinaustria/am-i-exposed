@@ -17,7 +17,7 @@ interface GraphToolbarProps {
   nodeCount: number;
   maxNodes: number;
   hiddenCount: number;
-  canUndo: boolean;
+  canUndo?: boolean;
   heatMapActive: boolean;
   heatProgress: number;
   fingerprintMode: boolean;
@@ -25,8 +25,8 @@ interface GraphToolbarProps {
   onToggleHeatMap: () => void;
   onToggleFingerprint: () => void;
   onCycleEdgeMode: () => void;
-  onUndo: () => void;
-  onReset: () => void;
+  onUndo?: () => void;
+  onReset?: () => void;
   onExpandFullscreen?: () => void;
   onZoomIn?: () => void;
   onZoomOut?: () => void;

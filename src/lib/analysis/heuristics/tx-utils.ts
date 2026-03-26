@@ -20,6 +20,15 @@ export function getAddressedOutputs(vout: MempoolVout[]): MempoolVout[] {
   return vout.filter((o) => o.scriptpubkey_type !== "op_return" && o.scriptpubkey_address && o.value > 0);
 }
 
+/** Count how many outputs share each value (value -> count). */
+export function countOutputValues(outputs: { value: number }[]): Map<number, number> {
+  const counts = new Map<number, number>();
+  for (const o of outputs) {
+    counts.set(o.value, (counts.get(o.value) ?? 0) + 1);
+  }
+  return counts;
+}
+
 /** Check if a scriptpubkey is an OP_RETURN output (starts with 0x6a opcode). */
 export function isOpReturn(scriptpubkey: string): boolean {
   return scriptpubkey.startsWith("6a");

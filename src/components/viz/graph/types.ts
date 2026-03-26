@@ -28,6 +28,10 @@ export interface GraphExplorerProps {
   onUndo?: () => void;
   canUndo?: boolean;
   onReset: () => void;
+  /** Number of undo snapshots (for time travel slider). */
+  undoStackLength?: number;
+  /** Jump to a specific snapshot index. */
+  onGotoSnapshot?: (index: number) => void;
   onTxClick?: (txid: string) => void;
   /** Boltzmann result for the root transaction (linkability edge coloring). */
   rootBoltzmannResult?: BoltzmannWorkerResult | null;

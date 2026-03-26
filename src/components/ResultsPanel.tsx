@@ -193,7 +193,7 @@ export const ResultsPanel = memo(function ResultsPanel({
 
       {/* Critical findings - immediately after the flow chart */}
       {criticalFindings.length > 0 && (
-        <FindingsSection issues={criticalFindings} visibleFindings={visibleFindings} onTxClick={onScan} delay={0.17} proMode={proMode} />
+        <FindingsSection issues={criticalFindings} onTxClick={onScan} delay={0.17} proMode={proMode} />
       )}
 
       {/* Transaction Graph (cypherpunk only, right after tx flow chart) */}
@@ -216,7 +216,7 @@ export const ResultsPanel = memo(function ResultsPanel({
 
       {/* Remaining findings (high severity + below, critical already shown above flow chart) */}
       {highFindings.length > 0 && (
-        <FindingsSection issues={highFindings} visibleFindings={visibleFindings} onTxClick={onScan} delay={0.2} proMode={proMode} />
+        <FindingsSection issues={highFindings} onTxClick={onScan} delay={0.2} proMode={proMode} />
       )}
 
       {/* Deep Analysis - Taint + Linkability (cypherpunk only, no GraphExplorer - moved above) */}

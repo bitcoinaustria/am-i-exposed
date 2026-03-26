@@ -3,7 +3,7 @@ import { probColor } from "../shared/linkabilityColors";
 import { DUST_THRESHOLD } from "@/lib/constants";
 import { getScriptTypeColor, getScriptTypeDash, getEdgeThickness } from "./scriptStyles";
 import { entropyColor } from "./privacyGradient";
-import type { LayoutEdge, PortPositionMap } from "./types";
+import type { LayoutEdge, PortPositionMap, ViewTransform } from "./types";
 import type { BoltzmannWorkerResult } from "@/lib/analysis/boltzmann-pool";
 
 // ─── Types for extracted helpers ─────────────────────────────────
@@ -292,4 +292,10 @@ export function resolveEdgePaths(
     : edgePath(edge);
 
   return { primary, extraConsolidation: [] };
+}
+
+/** Compute a ViewTransform that fits a graph of size (gw x gh) into a container (cw x ch). */
+export function computeFitTransform(gw: number, gh: number, cw: number, ch: number): ViewTransform {
+  const s = Math.min(cw / gw, ch / gh, 1.5);
+  return { x: (cw - gw * s) / 2, y: (ch - gh * s) / 2, scale: s };
 }
