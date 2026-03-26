@@ -95,10 +95,4 @@ For the full common.json (~2061 keys), `qc-review` chunks by namespace prefix an
 
 ## Current Locale Status
 
-| Locale | Keys | Status |
-| ------ | ---- | ------ |
-| en | 2061 | Source (canonical) |
-| de | 2061 | Complete |
-| es | 2055 | Missing 6 keys |
-| pt | 2018 | Missing 43 keys |
-| fr | 2018 | Missing 43 keys |
+Run the transcreation workflow's diff job to get up-to-date key counts per locale. Source of truth: `public/locales/en/common.json`.
